@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.venv/
+venv/
+*.egg-info/
+
+# Node / Vite
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# IDE / tools
+.opencode/
+opencode.jsonc
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Old Streamlit artefacts (deleted — do not recreate)
+# app.py
+# pages/
+# core/ui.py
+# lib/
+# data/
+# graph_preview.png

@@ -1,0 +1,167 @@
+import { useState } from 'react'
+import { validateCSP, timeWindow, runSearch, getNodes } from '../api'
+import { useEffect } from 'react'
+
+const PROFILES = [{v:'staff',l:'🩺 Staff'},{v:'emergency',l:'🚨 Emergency'},{v:'visitor',l:'👤 Visitor'},{v:'patient',l:'♿ Patient'}]
+
+export default function CSP() {
+  const [nodes, setNodes]   = useState([])
+  const [prof, setProf]     = useState('visitor')
+  const [start, setStart]   = useState('ENTRANCE_MAIN')
+  const [goal, setGoal]     = useState('Node_302_ICU_Tower')
+  const [hour, setHour]     = useState(10)
+  const [result, setResult] = useState(null)
+  const [tw, setTw]         = useState(null)
+  const [loading, setLoading] = useState(false)
+
+  useEffect(()=>{ getNodes().then(r=>setNodes(r.data)) },[])
+
+  const doValidate = async () => {
+    setLoading(true); setResult(null)
+    try {
+      // First find path, then validate it
+      const sr = await runSearch({algorithm:'astar', profile:prof, start, goal})
+      const path = sr.data.path
+      if (!path?.length) { setResult({path_found:false}); setLoading(false); return }
+      const r = await validateCSP({path, profile:prof, hour})
+      setResult({...r.data, path, cost:sr.data.cost})
+    } catch(e) { alert('CSP error: '+e.message) }
+    setLoading(false)
+  }
+
+  const doTimeWindow = async () => {
+    try {
+      const r = await timeWindow(prof, goal)
+      setTw(r.data)
+    } catch(e) { alert('Time window error: '+e.message) }
+  }
+
+  return (
+    <div>
+      <div className="page-header">
+        <div className="page-title">
+          🧩 CSP <span className="badge badge-co3">CO3</span>
+        </div>
+        <div className="page-sub">Backtracking · Forward Checking · AC-3 Arc Consistency · MRV Heuristic</div>
+      </div>
+
+      {/* Config */}
+      <div className="card">
+        <div className="form-row form-4">
+          <div className="form-group">
+            <label className="form-label">Access Profile</label>
+            <select className="form-control" value={prof} onChange={e=>setProf(e.target.value)}>
+              {PROFILES.map(p=><option key={p.v} value={p.v}>{p.l}</option>)}
+            </select>
+          </div>
+          <div className="form-group">
+            <label className="form-label">Start Node</label>
+            <select className="form-control" value={start} onChange={e=>setStart(e.target.value)}>
+              {nodes.map(n=><option key={n.id} value={n.id}>{n.label}</option>)}
+            </select>
+          </div>
+          <div className="form-group">
+            <label className="form-label">Goal Node</label>
+            <select className="form-control" value={goal} onChange={e=>setGoal(e.target.value)}>
+              {nodes.map(n=><option key={n.id} value={n.id}>{n.label}</option>)}
+            </select>
+          </div>
+          <div className="form-group">
+            <label className="form-label">Hour of Day ({hour}:00)</label>
+            <input type="range" min={0} max={23} value={hour}
+              onChange={e=>setHour(Number(e.target.value))}
+              style={{width:'100%',accentColor:'#b45309',marginTop:8}} />
+          </div>
+        </div>
+        <div style={{display:'flex', gap:10, marginTop:12}}>
+          <button className="btn btn-primary btn-full" onClick={doValidate} disabled={loading}>
+            {loading?'⏳ Validating…':'▶ Validate Path CSP'}
+          </button>
+          <button className="btn btn-secondary" onClick={doTimeWindow}>
+            🕐 Find Time Window
+          </button>
+        </div>
+      </div>
+
+      {/* Result */}
+      {result && (
+        <>
+          {result.path_found === false ? (
+            <div className="alert alert-error">❌ No path found for <strong>{prof}</strong> profile — CSP blocks all routes to this node.</div>
+          ) : (
+            <>
+              <div className={`alert ${result.overall_valid?'alert-success':'alert-error'}`}>
+                {result.overall_valid
+                  ? '✅ All CSP constraints satisfied — path is valid.'
+                  : `❌ ${result.violations} constraint violation(s) found.`}
+              </div>
+              <div className="alert alert-info">
+                📍 Path: {result.path?.join(' → ')} · {result.cost?.toFixed(0)}s
+              </div>
+
+              <div className="section-label">📋 Constraint Trace</div>
+              <div className="table-wrap">
+                <table className="trace-table">
+                  <thead>
+                    <tr><th>Step</th><th>Type</th><th>Node/Edge</th><th>Result</th><th>Reason</th></tr>
+                  </thead>
+                  <tbody>
+                    {result.trace?.map((t,i)=>(
+                      <tr key={i}>
+                        <td>{i+1}</td>
+                        <td>{t.type}</td>
+                        <td><code>{t.node||`${t.u}↔${t.v}`}</code></td>
+                        <td>
+                          <span style={{color:t.result==='PASS'?'#15803d':'#dc2626',fontWeight:700}}>
+                            {t.result==='PASS'?'✅ PASS':'❌ FAIL'}
+                          </span>
+                        </td>
+                        <td style={{fontSize:'.75rem'}}>{t.reason}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="section-label">🧩 CSP Explainability</div>
+              <div className="card card-sm" style={{fontSize:'.84rem',lineHeight:1.7}}>
+                <p><strong>Backtracking:</strong> tried all paths for profile <code>{prof}</code>, pruning restricted nodes.</p>
+                <p><strong>Forward Checking:</strong> at each hop, future accessibility verified before commitment.</p>
+                <p><strong>AC-3:</strong> arc consistency enforced — if node X blocks node Y, Y pruned early.</p>
+                <p><strong>MRV:</strong> Most-Restricted-Variable chosen first → fewest valid options = first to check.</p>
+              </div>
+            </>
+          )}
+        </>
+      )}
+
+      {/* Time window */}
+      {tw && (
+        <>
+          <div className="section-label">🕐 Valid Access Time Windows for {prof}</div>
+          <div className="card card-sm">
+            {tw.valid_hours?.length ? (
+              <>
+                <div className="alert alert-success" style={{marginBottom:10}}>
+                  ✅ {prof} can access {goal.replace(/_/g,' ')} during: <strong>{tw.valid_hours?.join(', ')}</strong>
+                </div>
+                <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
+                  {Array(24).fill(0).map((_,h)=>(
+                    <span key={h} style={{
+                      padding:'4px 10px', borderRadius:6, fontSize:'.72rem', fontWeight:700,
+                      background: tw.valid_hours?.includes(h) ? '#f0fdf4' : '#fef2f2',
+                      color: tw.valid_hours?.includes(h) ? '#15803d' : '#dc2626',
+                      border: `1px solid ${tw.valid_hours?.includes(h)?'#bbf7d0':'#fecaca'}`,
+                    }}>{h}:00</span>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div className="alert alert-error">❌ {prof} has no access to this node at any time.</div>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}

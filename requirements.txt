@@ -1,0 +1,30 @@
+# Core
+numpy>=1.24
+pandas>=2.0
+scipy>=1.10
+networkx>=3.1
+
+# Search / viz
+matplotlib>=3.7
+plotly>=5.18
+pyvis>=0.3.2
+
+# UI
+streamlit>=1.30
+
+# NLP — multilingual (Telugu / Hindi / English) + emotion
+langdetect>=1.0.9
+rapidfuzz>=3.6
+indic-transliteration>=2.3.37
+
+# Probabilistic
+pgmpy>=0.1.24
+
+# LLM providers (optional — NLP/speech only, not used by search algorithms)
+anthropic>=0.25              # Claude (Anthropic)
+google-generativeai>=0.7     # Gemini (Google)
+
+# Testing / profiling
+pytest>=7.4
+psutil>=5.9
+memory-profiler>=0.61
