@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { runSearch, compareAll, getNodes } from '../api'
 import GraphMap from '../components/GraphMap'
+import GraphSkeleton from '../components/GraphSkeleton'
+import ExportPDFButton from '../components/ExportPDF'
 
 const ALGOS   = [{v:'astar',l:'⭐ A*'},{v:'ucs',l:'💰 UCS'},{v:'bfs',l:'🌊 BFS'},{v:'dfs',l:'🔦 DFS'}]
 const PROFILES = [{v:'staff',l:'🩺 Staff'},{v:'emergency',l:'🚨 Emergency'},{v:'visitor',l:'👤 Visitor'},{v:'patient',l:'♿ Patient'}]
@@ -80,15 +82,23 @@ export default function Search() {
             </select>
           </div>
         </div>
-        <div style={{marginTop:14}}>
+        <div style={{marginTop:14, display:'flex', gap:10}}>
           <button className="btn btn-primary btn-full btn-lg" onClick={doSearch} disabled={loading}>
             {loading ? '⏳ Running…' : '▶ Run Search'}
           </button>
+          <ExportPDFButton result={result} algo={algo} prof={prof} start={start} goal={goal} />
         </div>
       </div>
 
+      {/* Skeleton while loading */}
+      {loading && (
+        <div style={{marginTop:16}}>
+          <GraphSkeleton message={`Running ${algo.toUpperCase()} on ${prof} profile…`} />
+        </div>
+      )}
+
       {/* Result */}
-      {result && (
+      {!loading && result && (
         <>
           {result.path?.length ? (
             <>

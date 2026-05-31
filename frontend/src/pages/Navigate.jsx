@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { getNodes, runSearch, parseNLP, validateCSP } from '../api'
 import GraphMap from '../components/GraphMap'
+import GraphSkeleton from '../components/GraphSkeleton'
+import ExportPDFButton from '../components/ExportPDF'
 
 const ALGOS    = [{v:'astar',l:'⭐ A*'},{v:'ucs',l:'💰 UCS'},{v:'bfs',l:'🌊 BFS'},{v:'dfs',l:'🔦 DFS'}]
 const PROFILES = [{v:'staff',l:'🩺 Staff'},{v:'emergency',l:'🚨 Emergency'},{v:'visitor',l:'👤 Visitor'},{v:'patient',l:'♿ Patient'}]
@@ -129,13 +131,15 @@ export default function Navigate() {
           </div>
 
           {/* Interactive graph map */}
-          <div className="section-label">🗺️ Interactive Hospital Graph</div>
-          <GraphMap
-            profile={prof}
-            path={sr?.path || []}
-            start={start}
-            goal={goal}
-          />
+          <div className="section-label" style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+            <span>🗺️ Interactive Hospital Graph</span>
+            <ExportPDFButton result={sr} algo={algo} prof={prof} start={start} goal={goal} nlp={nlp} />
+          </div>
+
+          {srLoading
+            ? <GraphSkeleton message={`${algo.toUpperCase()} searching ${prof} profile…`} />
+            : <GraphMap profile={prof} path={sr?.path || []} start={start} goal={goal} />
+          }
 
           {/* Path metrics below map */}
           {sr?.path?.length > 0 && (
