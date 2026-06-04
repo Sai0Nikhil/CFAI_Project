@@ -24,7 +24,18 @@ Complexity annotations:
 from __future__ import annotations
 import math
 from typing import Optional
-from core.hospital_graph import build_graph, heuristic, NODES
+from core.hospital_graph import build_graph as _charite_build_graph, heuristic as _charite_heuristic, NODES as _charite_NODES
+from core.aiims_graph   import build_graph as _aiims_build_graph,   heuristic as _aiims_heuristic,   NODES as _aiims_NODES
+
+def _get_graph_fns(hospital: str = "charite"):
+    if hospital == "aiims":
+        return _aiims_build_graph, _aiims_heuristic, _aiims_NODES
+    return _charite_build_graph, _charite_heuristic, _charite_NODES
+
+# default module-level symbols (used by mcts.py imports)
+build_graph = _charite_build_graph
+heuristic   = _charite_heuristic
+NODES       = _charite_NODES
 
 
 # ────────────────────────────────────────────────────────────────────────────
@@ -111,6 +122,11 @@ def minimax(
     """
     indent = "  " * (depth_limit - depth)
 
+    def _jsafe(v):
+        if v == math.inf:      return "inf"
+        if v == -math.inf:     return "-inf"
+        return round(v, 2)
+
     # Terminal: goal reached
     if node == goal:
         score = 200.0 - travel_cost  # big bonus for reaching goal fast
@@ -119,8 +135,8 @@ def minimax(
             "node": node,
             "is_max": is_max,
             "score": score,
-            "alpha": round(alpha, 2),
-            "beta": round(beta, 2),
+            "alpha": _jsafe(alpha),
+            "beta": _jsafe(beta),
             "note": f"{indent}🎯 GOAL REACHED  score={score:.1f}",
         })
         return score
@@ -133,8 +149,8 @@ def minimax(
             "node": node,
             "is_max": is_max,
             "score": score,
-            "alpha": round(alpha, 2),
-            "beta": round(beta, 2),
+            "alpha": _jsafe(alpha),
+            "beta": _jsafe(beta),
             "note": f"{indent}📊 Depth limit  eval={score:.1f}  cong={congestion}",
         })
         return score
@@ -158,8 +174,8 @@ def minimax(
                 "is_max": True,
                 "move": move_desc,
                 "child_val": round(child_val, 2),
-                "alpha": round(alpha, 2),
-                "beta": round(beta, 2),
+                "alpha": _jsafe(alpha),
+                "beta": _jsafe(beta),
                 "note": f"{indent}MAX: '{move_desc}' → val={child_val:.1f}",
             })
             if child_val > value:
@@ -169,8 +185,8 @@ def minimax(
                 prune_log.append({
                     "node": node,
                     "depth": depth_limit - depth,
-                    "alpha": round(alpha, 2),
-                    "beta": round(beta, 2),
+                    "alpha": _jsafe(alpha),
+                    "beta": _jsafe(beta),
                     "note": f"{indent}✂️  PRUNE (β={beta:.1f} ≤ α={alpha:.1f}) — MIN won't choose this branch",
                 })
                 break  # β-cutoff
@@ -190,8 +206,8 @@ def minimax(
                 "is_max": False,
                 "move": move_desc,
                 "child_val": round(child_val, 2),
-                "alpha": round(alpha, 2),
-                "beta": round(beta, 2),
+                "alpha": _jsafe(alpha),
+                "beta": _jsafe(beta),
                 "note": f"{indent}MIN: '{move_desc}' → val={child_val:.1f}",
             })
             if child_val < value:
@@ -201,8 +217,8 @@ def minimax(
                 prune_log.append({
                     "node": node,
                     "depth": depth_limit - depth,
-                    "alpha": round(alpha, 2),
-                    "beta": round(beta, 2),
+                    "alpha": _jsafe(alpha),
+                    "beta": _jsafe(beta),
                     "note": f"{indent}✂️  PRUNE (β={beta:.1f} ≤ α={alpha:.1f}) — MAX won't choose this branch",
                 })
                 break  # α-cutoff
@@ -218,12 +234,15 @@ def run_game(
     goal: str = "Node_302_ICU_Tower",
     depth_limit: int = 4,
     profile: str = "emergency",
+    hospital: str = "charite",
 ) -> dict:
     """
     Run the minimax triage routing scenario.
     Returns traces, prune log, best value, and bounded-rationality note.
+    hospital: 'charite' | 'aiims'
     """
-    G = build_graph(profile)
+    build_graph_fn, heuristic_fn, NODES_local = _get_graph_fns(hospital)
+    G = build_graph_fn(profile)
     if start not in G or goal not in G:
         return {"error": f"Node {start} or {goal} not in graph for profile '{profile}'"}
 
@@ -235,8 +254,8 @@ def run_game(
         "node": start,
         "is_max": True,
         "note": f"🏥 START minimax depth={depth_limit} | MAX=Ambulance MIN=Congestion | start={start} goal={goal}",
-        "alpha": -math.inf,
-        "beta": math.inf,
+        "alpha": "-inf",
+        "beta": "inf",
     })
 
     best_val = minimax(

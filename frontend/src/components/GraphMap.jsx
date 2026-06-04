@@ -23,7 +23,7 @@ function nodeColor(type = '') {
   return TYPE_COLOR[type.toLowerCase()] || TYPE_COLOR.default
 }
 
-export default function GraphMap({ profile = 'staff', path = [], start = '', goal = '' }) {
+export default function GraphMap({ profile = 'staff', path = [], start = '', goal = '', autoZoomPath = true, pathOnly = false, hospital = 'charite' }) {
   const containerRef = useRef(null)
   const networkRef   = useRef(null)
   const [graphData, setGraphData]   = useState(null)
@@ -32,14 +32,14 @@ export default function GraphMap({ profile = 'staff', path = [], start = '', goa
   const [nodeCount, setNodeCount]   = useState(0)
   const [edgeCount, setEdgeCount]   = useState(0)
 
-  // Fetch graph whenever profile changes
+  // Fetch graph whenever profile OR hospital changes
   useEffect(() => {
     setLoading(true)
-    getGraph(profile)
+    getGraph(profile, hospital)
       .then(r => { setGraphData(r.data); setNodeCount(r.data.node_count); setEdgeCount(r.data.edge_count) })
       .catch(() => {})
       .finally(() => setLoading(false))
-  }, [profile])
+  }, [profile, hospital])
 
   // Build / update vis-network
   useEffect(() => {
@@ -55,9 +55,13 @@ export default function GraphMap({ profile = 'staff', path = [], start = '', goa
         const isStart = n.id === start
         const isGoal  = n.id === goal
 
+        // In pathOnly mode, non-path nodes become nearly invisible
+        const hidden = pathOnly && !onPath && !isStart && !isGoal
+
         const color = isStart ? '#f59e0b'
                     : isGoal  ? '#ef4444'
                     : onPath  ? '#22c55e'
+                    : hidden  ? '#f0ede8'   // matches background — invisible
                     : nodeColor(n.type)
 
         return {
@@ -65,22 +69,34 @@ export default function GraphMap({ profile = 'staff', path = [], start = '', goa
           label: n.label.replace(/_/g,' ').replace(/\s+/g,' '),
           color: {
             background: color,
-            border:     isStart||isGoal ? '#111827' : color,
-            highlight:  { background: '#fef3c7', border: '#b45309' },
-            hover:      { background: '#fef3c7', border: '#b45309' },
+            border: hidden  ? '#f0ede8'
+                  : isStart ? '#92400e'
+                  : isGoal  ? '#7f1d1d'
+                  : onPath  ? '#166534'
+                  : '#c4a882',
+            highlight: { background: '#fef3c7', border: '#b45309' },
+            hover:     { background: '#fef3c7', border: '#b45309' },
           },
-          size:      isStart||isGoal ? 24 : onPath ? 16 : 9,
-          font:      { size: onPath||isStart||isGoal ? 11 : 9,
-                       color: '#111827', face: 'Inter, system-ui, sans-serif',
-                       bold: onPath||isStart||isGoal },
-          borderWidth: isStart||isGoal ? 3 : onPath ? 2 : 1,
-          shadow:    onPath,
-          title:     `<div style="font-family:Inter,sans-serif;padding:6px 10px;font-size:12px;color:#111827">
-                        <b>${n.label.replace(/_/g,' ')}</b><br/>
-                        Floor ${n.floor} · ${n.type || 'node'}<br/>
-                        Wing: ${n.wing || '—'}
-                      </div>`,
-          // store raw data for click panel
+          size:        isStart||isGoal ? 28 : onPath ? 20 : hidden ? 3 : 8,
+          font: {
+            size:  isStart||isGoal ? 13 : onPath ? 11 : hidden ? 0 : 8,
+            color: isStart||isGoal ? '#111827' : onPath ? '#111827' : hidden ? '#f0ede8' : '#6b7280',
+            face:  'Inter, system-ui, sans-serif',
+            bold:  onPath || isStart || isGoal,
+            background: onPath ? 'rgba(255,255,255,0.85)' : undefined,
+          },
+          borderWidth:      isStart||isGoal ? 4 : onPath ? 3 : 1,
+          borderWidthSelected: 4,
+          shadow: onPath || isStart || isGoal
+            ? { enabled:true, color:'rgba(0,0,0,.25)', size:10, x:2, y:2 }
+            : false,
+          title: `<div style="font-family:Inter,sans-serif;padding:8px 12px;font-size:12px;color:#111827;min-width:140px">
+                    <b style="font-size:13px">${n.label.replace(/_/g,' ')}</b><br/>
+                    <span style="color:#6b7280">Floor ${n.floor} · ${n.type || 'node'}</span><br/>
+                    ${onPath ? '<span style="color:#15803d;font-weight:700">✅ On path</span>' : ''}
+                    ${isStart ? '<span style="color:#b45309;font-weight:700">🟡 Start</span>' : ''}
+                    ${isGoal  ? '<span style="color:#dc2626;font-weight:700">🔴 Goal</span>' : ''}
+                  </div>`,
           _raw: n,
         }
       })
@@ -96,12 +112,21 @@ export default function GraphMap({ profile = 'staff', path = [], start = '', goa
           id:     i,
           from:   e.source,
           to:     e.target,
-          color:  { color: onPath ? '#f59e0b' : '#d1c4b0', highlight:'#b45309', hover:'#b45309' },
-          width:  onPath ? 4 : 1,
-          arrows: onPath ? { to: { enabled:true, scaleFactor:.6 } } : {},
-          title:  `${e.via || 'passage'} · ${e.weight}s`,
-          smooth: { type:'continuous' },
-          shadow: onPath,
+          color:  {
+            color:     onPath ? '#f59e0b' : pathOnly ? '#f0ede8' : '#ddd0bb',
+            highlight: '#b45309',
+            hover:     '#b45309',
+          },
+          width:  onPath ? 6 : pathOnly ? 0.3 : 1,
+          arrows: onPath ? { to: { enabled:true, scaleFactor:.8, type:'arrow' } } : {},
+          title:  `<div style="font-family:Inter,sans-serif;padding:4px 8px;font-size:11px">
+                    ${e.via || 'passage'} · <b>${e.weight}s</b>
+                    ${onPath ? ' · <span style="color:#15803d">✅ path</span>' : ''}
+                  </div>`,
+          smooth: { type:'curvedCW', roundness: onPath ? 0 : 0.1 },
+          shadow: onPath
+            ? { enabled:true, color:'rgba(245,158,11,.4)', size:8, x:0, y:0 }
+            : false,
         }
       })
     )
@@ -116,8 +141,8 @@ export default function GraphMap({ profile = 'staff', path = [], start = '', goa
         keyboard: { enabled: true },
         zoomView: true,
       },
-      nodes: { shape:'dot', borderWidth:1 },
-      edges: { smooth:{ type:'continuous' } },
+      nodes: { shape: 'dot', borderWidth: 1 },
+      edges: { smooth: { type: 'continuous' } },
       layout: { improvedLayout: true },
     }
 
@@ -141,26 +166,78 @@ export default function GraphMap({ profile = 'staff', path = [], start = '', goa
       }
     })
 
-    // Fit to view after stabilisation
-    network.once('stabilized', () => network.fit({ animation: { duration:400, easingFunction:'easeInOutQuad' } }))
+    // After stabilisation: zoom to path if one exists, else fit all
+    network.once('stabilized', () => {
+      if (autoZoomPath && path.length > 1) {
+        // Zoom to just the path nodes with padding
+        network.fit({
+          nodes: path,
+          animation: { duration: 700, easingFunction: 'easeInOutQuad' },
+        })
+      } else {
+        network.fit({ animation: { duration: 400, easingFunction: 'easeInOutQuad' } })
+      }
+    })
 
     return () => {
       if (networkRef.current) { networkRef.current.destroy(); networkRef.current = null }
     }
-  }, [graphData, path, start, goal])
+  }, [graphData, path, start, goal, pathOnly])
 
   // Zoom controls
-  const zoomIn  = () => networkRef.current?.moveTo({ scale: (networkRef.current.getScale()||1)*1.3 })
-  const zoomOut = () => networkRef.current?.moveTo({ scale: (networkRef.current.getScale()||1)*0.75 })
-  const fitAll  = () => networkRef.current?.fit({ animation:{ duration:300 } })
+  const zoomIn    = () => networkRef.current?.moveTo({ scale: (networkRef.current.getScale()||1)*1.3 })
+  const zoomOut   = () => networkRef.current?.moveTo({ scale: (networkRef.current.getScale()||1)*0.75 })
+  const fitAll    = () => networkRef.current?.fit({ animation:{ duration:300 } })
+  const fitPath   = () => {
+    if (path.length > 1)
+      networkRef.current?.fit({ nodes: path, animation:{ duration:500, easingFunction:'easeInOutQuad' } })
+  }
 
   return (
     <div style={{position:'relative'}}>
+
+      {/* ── Path breadcrumb strip ─────────────────────────────────────── */}
+      {path.length > 0 && (
+        <div style={{
+          display:'flex', alignItems:'center', flexWrap:'wrap', gap:4,
+          background:'linear-gradient(135deg,#f0fdf4,#dcfce7)',
+          border:'2px solid #22c55e', borderRadius:10,
+          padding:'10px 14px', marginBottom:10,
+          fontSize:'.78rem', fontWeight:600,
+        }}>
+          <span style={{color:'#15803d', fontWeight:800, marginRight:4}}>🗺️ Route:</span>
+          {path.map((node, i) => (
+            <span key={node} style={{display:'flex', alignItems:'center', gap:4}}>
+              <span style={{
+                background: i===0 ? '#f59e0b' : i===path.length-1 ? '#ef4444' : '#22c55e',
+                color:'#fff', borderRadius:6, padding:'2px 8px',
+                fontSize:'.72rem', fontWeight:700, whiteSpace:'nowrap',
+                boxShadow:'0 1px 3px rgba(0,0,0,.15)',
+              }}>
+                {i===0 ? '🟡 ' : i===path.length-1 ? '🔴 ' : ''}{node.replace(/_/g,' ')}
+              </span>
+              {i < path.length-1 && <span style={{color:'#15803d', fontWeight:900}}>→</span>}
+            </span>
+          ))}
+          <span style={{marginLeft:'auto', color:'#15803d', fontSize:'.7rem'}}>
+            {path.length} stops
+          </span>
+        </div>
+      )}
+
       {/* Toolbar */}
       <div style={{display:'flex', alignItems:'center', gap:6, marginBottom:6, flexWrap:'wrap'}}>
         <button onClick={zoomIn}  className="btn btn-secondary" style={{padding:'4px 10px',fontSize:'.72rem'}}>＋ Zoom In</button>
         <button onClick={zoomOut} className="btn btn-secondary" style={{padding:'4px 10px',fontSize:'.72rem'}}>－ Zoom Out</button>
         <button onClick={fitAll}  className="btn btn-secondary" style={{padding:'4px 10px',fontSize:'.72rem'}}>⊡ Fit All</button>
+        {path.length > 1 && (
+          <button onClick={fitPath}
+            style={{padding:'4px 12px', fontSize:'.72rem', fontWeight:700,
+              background:'#fef3c7', border:'1px solid #fcd34d', borderRadius:6,
+              cursor:'pointer', color:'#92400e', fontFamily:'inherit'}}>
+            🟡 Zoom to Path
+          </button>
+        )}
         <div style={{marginLeft:'auto', fontSize:'.72rem', color:'#6b7280'}}>
           {nodeCount} nodes · {edgeCount} edges · profile: <strong>{profile}</strong>
         </div>
@@ -174,7 +251,7 @@ export default function GraphMap({ profile = 'staff', path = [], start = '', goa
             <div><div className="spinner"/><p style={{marginTop:10,fontSize:'.8rem',color:'#6b7280',textAlign:'center'}}>Loading graph…</p></div>
           </div>
         )}
-        <div ref={containerRef} style={{height:380, width:'100%'}} />
+        <div ref={containerRef} style={{height:420, width:'100%'}} />
       </div>
 
       {/* Legend */}

@@ -3,6 +3,8 @@ import { runSearch, compareAll, getNodes } from '../api'
 import GraphMap from '../components/GraphMap'
 import GraphSkeleton from '../components/GraphSkeleton'
 import ExportPDFButton from '../components/ExportPDF'
+import AIInsight from '../components/AIInsight'
+import { useAI } from '../context/AIContext'
 
 const ALGOS   = [{v:'astar',l:'⭐ A*'},{v:'ucs',l:'💰 UCS'},{v:'bfs',l:'🌊 BFS'},{v:'dfs',l:'🔦 DFS'}]
 const PROFILES = [{v:'staff',l:'🩺 Staff'},{v:'emergency',l:'🚨 Emergency'},{v:'visitor',l:'👤 Visitor'},{v:'patient',l:'♿ Patient'}]
@@ -10,24 +12,33 @@ const CMPLX   = {bfs:'O(V+E)',dfs:'O(V+E)',ucs:'O((V+E)logV)',astar:'O((V+E)logV
 const OPTIMAL = {bfs:'Hops only',dfs:'❌ No',ucs:'✅ Cost',astar:'✅ Cost + h(n)'}
 
 export default function Search() {
+  const { hospital, hospitalInfo } = useAI()
   const [nodes, setNodes]   = useState([])
   const [algo, setAlgo]     = useState('astar')
   const [prof, setProf]     = useState('staff')
-  const [start, setStart]   = useState('ENTRANCE_MAIN')
-  const [goal, setGoal]     = useState('Node_302_ICU_Tower')
+  const [start, setStart]   = useState(hospitalInfo?.defaultStart || 'ENTRANCE_MAIN')
+  const [goal, setGoal]     = useState(hospitalInfo?.defaultGoal  || 'Node_302_ICU_Tower')
   const [result, setResult] = useState(null)
   const [cmp, setCmp]       = useState(null)
   const [loading, setLoading] = useState(false)
   const [cmpLoading, setCmpLoading] = useState(false)
   const [showAll, setShowAll] = useState(false)
+  const [aiTrigger, setAiTrigger] = useState(0)
+  const [cmpAiTrigger, setCmpAiTrigger] = useState(0)
 
-  useEffect(() => { getNodes().then(r => setNodes(r.data)) }, [])
+  useEffect(() => { getNodes(hospital).then(r => setNodes(r.data)) }, [hospital])
+  // Reset defaults when hospital changes
+  useEffect(() => {
+    setStart(hospitalInfo?.defaultStart || 'ENTRANCE_MAIN')
+    setGoal(hospitalInfo?.defaultGoal   || 'Node_302_ICU_Tower')
+  }, [hospital])
 
   const doSearch = async () => {
     setLoading(true); setResult(null)
     try {
-      const r = await runSearch({algorithm:algo, profile:prof, start, goal})
+      const r = await runSearch({algorithm:algo, profile:prof, start, goal, hospital})
       setResult(r.data)
+      setAiTrigger(t => t + 1)
     } catch(e) { alert('Search failed: '+e.message) }
     setLoading(false)
   }
@@ -35,8 +46,9 @@ export default function Search() {
   const doCompare = async () => {
     setCmpLoading(true); setCmp(null)
     try {
-      const r = await compareAll({profile:prof, start, goal})
+      const r = await compareAll({profile:prof, start, goal, hospital})
       setCmp(r.data)
+      setCmpAiTrigger(t => t + 1)
     } catch(e) { alert('Compare failed: '+e.message) }
     setCmpLoading(false)
   }
@@ -51,7 +63,7 @@ export default function Search() {
           🔍 Search
           <span className="badge badge-co2">CO2</span>
         </div>
-        <div className="page-sub">BFS · DFS · UCS · A* on the Charité Campus Mitte hospital graph</div>
+        <div className="page-sub">BFS · DFS · UCS · A* on the {hospitalInfo?.name || 'hospital'} graph {hospitalInfo?.flag}</div>
       </div>
 
       {/* Controls */}
@@ -132,7 +144,7 @@ export default function Search() {
           {result.path?.length > 0 && (
             <>
               <div className="section-label">🗺️ Interactive Hospital Graph</div>
-              <GraphMap profile={prof} path={result.path} start={start} goal={goal} />
+              <GraphMap profile={prof} path={result.path} start={start} goal={goal} hospital={hospital} />
             </>
           )}
 
@@ -170,6 +182,14 @@ export default function Search() {
               )}
 
               {/* Explainability */}
+              <AIInsight
+                module="search"
+                trigger={aiTrigger}
+                context={{ algorithm:algo, profile:prof, start, goal,
+                  path:result.path, cost:result.cost,
+                  expansions:result.stats?.expansions }}
+              />
+
               <details style={{marginTop:14}}>
                 <summary>🔍 Why this path? (CO2 Explainability)</summary>
                 <div className="card card-sm" style={{marginTop:8, fontSize:'.85rem', lineHeight:1.7}}>
@@ -225,6 +245,11 @@ export default function Search() {
               </tbody>
             </table>
           </div>
+          <AIInsight
+            module="compare"
+            trigger={cmpAiTrigger}
+            context={{ results: cmp, start, goal, profile: prof }}
+          />
           {cmp.astar?.path?.length>0 && (
             <div className="alert alert-success" style={{marginTop:12}}>
               ⭐ <strong>A*</strong> finds the optimal-cost path ({cmp.astar.cost?.toFixed(0)}s)

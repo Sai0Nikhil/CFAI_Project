@@ -270,7 +270,7 @@ def hmm_forward(observations: list[str]) -> dict:
 # Uncertainty-aware path cost adjustment
 # ────────────────────────────────────────────────────────────────────────────
 
-def adjust_path_cost(path: list[str], sensor_readings: dict[str, str]) -> dict:
+def adjust_path_cost(path: list[str], sensor_readings: dict[str, str], hospital: str = "charite") -> dict:
     """
     Given sensor readings per node, adjust edge costs using occupancy posteriors.
     High occupancy → multiply edge weight by congestion factor.
@@ -281,8 +281,10 @@ def adjust_path_cost(path: list[str], sensor_readings: dict[str, str]) -> dict:
     """
     FACTOR = {"low": 1.0, "medium": 1.4, "high": 2.0}
     import importlib
-    from core.hospital_graph import build_graph
-    G = build_graph("staff")
+    from core.hospital_graph import build_graph as _charite_bg
+    from core.aiims_graph   import build_graph as _aiims_bg
+    _bgfn = _aiims_bg if hospital == "aiims" else _charite_bg
+    G = _bgfn("staff")
 
     adjusted = []
     total_base = 0

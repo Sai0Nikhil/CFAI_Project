@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react'
 import { bayesInfer, bayesHMM, bayesRoute, bayesOptions, getNodes } from '../api'
+import AIInsight from '../components/AIInsight'
+import { useAI } from '../context/AIContext'
 
 export default function Bayesian() {
+  const { hospital, hospitalInfo } = useAI()
   const [opts, setOpts]     = useState({time_of_day:[], sensors:[], occupancy:[], hmm_states:[]})
   const [nodes, setNodes]   = useState([])
   const [tab, setTab]       = useState('bayes')
@@ -22,14 +25,17 @@ export default function Bayesian() {
   const [hmmLoading, setHmmLoading] = useState(false)
 
   // Route
-  const [rStart, setRStart] = useState('ENTRANCE_MAIN')
-  const [rGoal, setRGoal]   = useState('Node_302_ICU_Tower')
+  const [rStart, setRStart] = useState(hospitalInfo?.defaultStart || 'ENTRANCE_MAIN')
+  const [rGoal, setRGoal]   = useState(hospitalInfo?.defaultGoal  || 'Node_302_ICU_Tower')
   const [routeRes, setRouteRes] = useState(null)
   const [routeLoading, setRouteLoading] = useState(false)
+  const [bayesAI, setBayesAI] = useState(0)
+  const [hmmAI, setHmmAI]     = useState(0)
+  const [routeAI, setRouteAI] = useState(0)
 
   useEffect(()=>{
     bayesOptions().then(r=>{ setOpts(r.data); setTod(r.data.time_of_day?.[0]||'morning') })
-    getNodes().then(r=>setNodes(r.data))
+    getNodes(hospital).then(r=>setNodes(r.data))
   },[])
 
   const doInfer = async () => {
@@ -37,6 +43,7 @@ export default function Bayesian() {
     try {
       const r = await bayesInfer({sensor, time_of_day:fixTime?tod:null, day_type:fixDay?day:null})
       setBayesRes(r.data)
+      setBayesAI(t => t + 1)
     } catch(e) { alert(e.message) }
     setBayesLoading(false)
   }
@@ -46,6 +53,7 @@ export default function Bayesian() {
     try {
       const r = await bayesHMM({observations: obs.slice(0,nObs)})
       setHmmRes(r.data)
+      setHmmAI(t => t + 1)
     } catch(e) { alert(e.message) }
     setHmmLoading(false)
   }
@@ -53,8 +61,9 @@ export default function Bayesian() {
   const doRoute = async () => {
     setRouteLoading(true); setRouteRes(null)
     try {
-      const r = await bayesRoute({start:rStart, goal:rGoal})
+      const r = await bayesRoute({start:rStart, goal:rGoal, hospital})
       setRouteRes(r.data)
+      setRouteAI(t => t + 1)
     } catch(e) { alert(e.message) }
     setRouteLoading(false)
   }
@@ -120,6 +129,9 @@ export default function Bayesian() {
           {bayesRes && (
             <>
               <div className="alert alert-success">{bayesRes.explanation}</div>
+              <AIInsight module="bayesian" trigger={bayesAI}
+                context={{ tab:'bayes', sensor, posterior:bayesRes.posterior,
+                  map_estimate:bayesRes.map_estimate, explanation:bayesRes.explanation }} />
               <div className="section-label">📊 P(Occupancy | evidence)</div>
               <div className="card card-sm">
                 {opts.occupancy.map(o=>{
@@ -179,6 +191,10 @@ export default function Bayesian() {
           {hmmRes && (
             <>
               <div className="alert alert-success">{hmmRes.explanation}</div>
+              <AIInsight module="bayesian" trigger={hmmAI}
+                context={{ tab:'hmm', observations:obs.slice(0,nObs),
+                  final_belief: hmmRes.trace?.[hmmRes.trace.length-1]?.belief || {},
+                  explanation:hmmRes.explanation }} />
               <div className="section-label">📡 Belief Evolution Over Time</div>
               <div className="table-wrap">
                 <table className="trace-table">
@@ -232,6 +248,10 @@ export default function Bayesian() {
           {routeRes && (
             <>
               <div className="alert alert-success">{routeRes.explanation}</div>
+              <AIInsight module="bayesian" trigger={routeAI}
+                context={{ tab:'route', total_base_cost:routeRes.total_base_cost,
+                  total_adjusted_cost:routeRes.total_adjusted_cost,
+                  explanation:routeRes.explanation }} />
               <div className="metrics-row metrics-3" style={{marginBottom:16}}>
                 {[
                   {val:`${routeRes.total_base_cost}s`, lbl:'Base Cost'},

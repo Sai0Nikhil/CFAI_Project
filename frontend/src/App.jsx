@@ -7,6 +7,7 @@ import CSP from './pages/CSP'
 import Game from './pages/Game'
 import Bayesian from './pages/Bayesian'
 import NLP from './pages/NLP'
+import AILab from './pages/AILab'
 
 export default function App() {
   return (
@@ -17,6 +18,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/navigate" element={<Navigate />} />
+            <Route path="/lab" element={<AILab />} />
             <Route path="/search" element={<Search />} />
             <Route path="/csp" element={<CSP />} />
             <Route path="/game" element={<Game />} />

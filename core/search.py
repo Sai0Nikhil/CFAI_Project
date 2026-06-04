@@ -18,7 +18,16 @@ import heapq
 from collections import deque
 from typing import Optional
 import networkx as nx
-from core.hospital_graph import build_graph, heuristic
+from core.hospital_graph import build_graph as _charite_build_graph, heuristic as _charite_heuristic
+from core.aiims_graph   import build_graph as _aiims_build_graph,   heuristic as _aiims_heuristic
+
+# Module-level alias used by astar() directly — both heuristics are identical formulas
+heuristic = _charite_heuristic
+
+def _get_graph_fns(hospital: str):
+    if hospital == "aiims":
+        return _aiims_build_graph, _aiims_heuristic
+    return _charite_build_graph, _charite_heuristic
 
 
 # ────────────────────────────────────────────────────────────────────────────
@@ -306,13 +315,15 @@ def astar(G: nx.Graph, start: str, goal: str) -> dict:
 # Convenience runner
 # ────────────────────────────────────────────────────────────────────────────
 
-def run_search(algorithm: str, profile: str, start: str, goal: str) -> dict:
+def run_search(algorithm: str, profile: str, start: str, goal: str, hospital: str = "charite") -> dict:
     """
-    Unified entry point for the Streamlit page.
+    Unified entry point.
 
     algorithm: 'bfs' | 'dfs' | 'ucs' | 'astar'
     profile  : 'visitor' | 'patient' | 'staff' | 'emergency'
+    hospital : 'charite' | 'aiims'
     """
+    build_graph, heuristic = _get_graph_fns(hospital)
     G = build_graph(profile)
     fn = {"bfs": bfs, "dfs": dfs, "ucs": ucs, "astar": astar}[algorithm]
     result = fn(G, start, goal)

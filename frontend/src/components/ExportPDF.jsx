@@ -161,7 +161,7 @@ function buildHTML({ result, algo, prof, start, goal, nlp }) {
   <div class="header">
     <div class="header-left">
       <h1>🏥 Charité Hospital AI Navigator</h1>
-      <p>Campus Mitte · Berlin &nbsp;·&nbsp; IIT Madras CFAI Project</p>
+      <p>Campus Mitte · Berlin &nbsp;·&nbsp; 2500032630 CFAI Project</p>
       <div style="margin-top:8px">
         <span class="co-badge co1">CO1</span>
         <span class="co-badge co2">CO2</span>
@@ -256,7 +256,7 @@ function buildHTML({ result, algo, prof, start, goal, nlp }) {
   ${nlpSection}
 
   <div class="footer">
-    <span>IIT Madras · CFAI Project · Charité Campus Mitte · CO1–CO6</span>
+    <span>2500032630 · CFAI Project · Charité Campus Mitte · CO1–CO6</span>
     <span>github.com/Sai0Nikhil/CFAI_Project</span>
   </div>
 

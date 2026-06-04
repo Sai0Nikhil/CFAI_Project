@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { parseNLP } from '../api'
+import AIInsight from '../components/AIInsight'
+import { useAI } from '../context/AIContext'
 
 const DEMOS = [
   {lang:'en', label:'🌐 English', queries:['Take me to the ICU','Where is the pharmacy?','Emergency! I am bleeding']},
@@ -11,16 +13,25 @@ const URG_CLS = {CRITICAL:'urg-critical', HIGH:'urg-high', NORMAL:'urg-normal'}
 const URG_EMO = {CRITICAL:'🚨', HIGH:'⚠️', NORMAL:'✅'}
 
 export default function NLP() {
+  const { isReady, apiKey, provider, model } = useAI()
   const [query, setQuery]   = useState('')
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [aiTrigger, setAiTrigger] = useState(0)
 
   const doparse = async (q = query) => {
     if (!q.trim()) return
     setLoading(true); setResult(null)
     try {
-      const r = await parseNLP({query:q, use_llm:false})
+      const r = await parseNLP({
+        query: q,
+        use_llm: isReady,
+        api_key: apiKey,
+        provider,
+        model,
+      })
       setResult(r.data)
+      setAiTrigger(t => t + 1)
     } catch(e) { alert(e.message) }
     setLoading(false)
   }
@@ -99,7 +110,7 @@ export default function NLP() {
               <div style={{textAlign:'right'}}>
                 <div style={{fontSize:'.62rem',fontWeight:700,letterSpacing:'.6px',textTransform:'uppercase',color:'#6b7280',marginBottom:2}}>Detected Language</div>
                 <span style={{fontWeight:700,fontSize:'.9rem'}}>
-                  {{te:'🇮🇳 Telugu',hi:'🇮🇳 Hindi',en:'🌐 English'}[result.language]||result.language}
+                  {({'te':'🇮🇳 Telugu','hi':'🇮🇳 Hindi','en':'🌐 English'})[result.language]||result.language}
                 </span>
               </div>
             </div>
@@ -110,6 +121,13 @@ export default function NLP() {
               <span style={{fontSize:'.82rem',color:'#374151'}}>{result.urgency?.routing_hint}</span>
             </div>
           </div>
+
+          <AIInsight module="nlp" trigger={aiTrigger}
+            context={{ query, language:result.language,
+              target_friendly:result.target_friendly,
+              target_node:result.target_node,
+              urgency_level:result.urgency?.level,
+              matched_keywords:result.urgency?.matched_keywords||[] }} />
 
           <div className="section-label">📋 Full Pipeline Trace</div>
           <div className="table-wrap">

@@ -1,6 +1,6 @@
 # 🏥 Charité Hospital AI Navigator
 
-> **IIT Madras · CFAI Project** — Full-stack AI system built on the Charité Campus Mitte hospital model, covering all 6 course outcomes (CO1–CO6).
+> **2500032630 · CFAI Project** — Full-stack AI system built on the Charité Campus Mitte hospital model, covering all 6 course outcomes (CO1–CO6).
 
 [![GitHub](https://img.shields.io/badge/GitHub-Sai0Nikhil%2FCFAI__Project-181717?logo=github)](https://github.com/Sai0Nikhil/CFAI_Project)
 ![React](https://img.shields.io/badge/Frontend-React_+_Vite-61dafb?logo=react)
@@ -228,7 +228,7 @@ pytest tests/ -v
 
 ## 👤 Author
 
-**Sai Nikhil** · IIT Madras · CFAI Project  
+**Sai Nikhil** · 2500032630 · CFAI Project  
 Roll: `25f2005507`  
 GitHub: [@Sai0Nikhil](https://github.com/Sai0Nikhil)
 

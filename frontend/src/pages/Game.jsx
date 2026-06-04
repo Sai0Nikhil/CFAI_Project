@@ -1,25 +1,31 @@
 import { useState, useEffect } from 'react'
 import { runGame, getNodes } from '../api'
+import AIInsight from '../components/AIInsight'
+import { useAI } from '../context/AIContext'
 
 const PROFILES = [{v:'emergency',l:'🚨 Emergency'},{v:'staff',l:'🩺 Staff'},{v:'visitor',l:'👤 Visitor'},{v:'patient',l:'♿ Patient'}]
 
 export default function Game() {
+  const { hospital, hospitalInfo } = useAI()
   const [nodes, setNodes]   = useState([])
-  const [start, setStart]   = useState('ENTRANCE_MAIN')
-  const [goal, setGoal]     = useState('Node_302_ICU_Tower')
+  const [start, setStart]   = useState(hospitalInfo?.defaultStart || 'ENTRANCE_MAIN')
+  const [goal, setGoal]     = useState(hospitalInfo?.defaultGoal  || 'Node_302_ICU_Tower')
   const [prof, setProf]     = useState('emergency')
   const [depth, setDepth]   = useState(3)
   const [ab, setAb]         = useState(true)
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [aiTrigger, setAiTrigger] = useState(0)
 
-  useEffect(()=>{ getNodes().then(r=>setNodes(r.data)) },[])
+  useEffect(()=>{ getNodes(hospital).then(r=>setNodes(r.data)) },[hospital])
+  useEffect(()=>{ setStart(hospitalInfo?.defaultStart||'ENTRANCE_MAIN'); setGoal(hospitalInfo?.defaultGoal||'Node_302_ICU_Tower') },[hospital])
 
   const doRun = async () => {
     setLoading(true); setResult(null)
     try {
-      const r = await runGame({start, goal, profile:prof, depth, use_alpha_beta:ab})
+      const r = await runGame({start, goal, profile:prof, depth, use_alpha_beta:ab, hospital})
       setResult(r.data)
+      setAiTrigger(t => t + 1)
     } catch(e) { alert('Game error: '+e.message) }
     setLoading(false)
   }
@@ -142,6 +148,13 @@ export default function Game() {
             </>
           )}
 
+          <AIInsight
+            module="game"
+            trigger={aiTrigger}
+            context={{ best_path:result.best_path, best_cost:result.best_cost,
+              depth, pruned_branches:result.pruned_branches,
+              nodes_evaluated:result.nodes_evaluated, alpha_beta:ab }}
+          />
           <div className="section-label">♟️ CO4 Explainability</div>
           <div className="card card-sm" style={{fontSize:'.84rem',lineHeight:1.7}}>
             <p><strong>Minimax:</strong> MAX maximises path quality; MIN simulates worst-case congestion.</p>

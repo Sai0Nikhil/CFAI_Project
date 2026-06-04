@@ -22,7 +22,18 @@ Complexity annotations:
 
 from __future__ import annotations
 from typing import Any
-from core.hospital_graph import NODES, EDGES, build_graph
+from core.hospital_graph import NODES as _charite_NODES, EDGES as _charite_EDGES, build_graph as _charite_build_graph
+from core.aiims_graph   import NODES as _aiims_NODES,   EDGES as _aiims_EDGES,   build_graph as _aiims_build_graph
+
+def _get_graph_fns(hospital: str = "charite"):
+    if hospital == "aiims":
+        return _aiims_NODES, _aiims_EDGES, _aiims_build_graph
+    return _charite_NODES, _charite_EDGES, _charite_build_graph
+
+# default module-level symbols
+NODES       = _charite_NODES
+EDGES       = _charite_EDGES
+build_graph = _charite_build_graph
 
 
 # ────────────────────────────────────────────────────────────────────────────
@@ -122,7 +133,7 @@ def check_edge_constraint(u: str, v: str, via: str, profile: str) -> tuple[bool,
 # AC-3 Arc Consistency
 # ────────────────────────────────────────────────────────────────────────────
 
-def ac3(path: list[str], profile: str, hour: int = 10) -> tuple[bool, list[dict]]:
+def ac3(path: list[str], profile: str, hour: int = 10, hospital: str = "charite") -> tuple[bool, list[dict]]:
     """
     AC-3 applied to the path's edge arcs.
     For each consecutive pair (u, v) in path: check both directions.
@@ -135,7 +146,8 @@ def ac3(path: list[str], profile: str, hour: int = 10) -> tuple[bool, list[dict]
     Returns: (consistent: bool, arc_log: list[dict])
     """
     import networkx as nx
-    G = build_graph("staff")  # full graph for edge attrs
+    _, _, build_graph_fn = _get_graph_fns(hospital)
+    G = build_graph_fn("staff")  # full graph for edge attrs
 
     arc_log = []
     domains = {n: {"allowed"} for n in path}
@@ -178,7 +190,7 @@ def ac3(path: list[str], profile: str, hour: int = 10) -> tuple[bool, list[dict]
 # Backtracking path validator with constraint propagation (forward checking)
 # ────────────────────────────────────────────────────────────────────────────
 
-def validate_path_csp(path: list[str], profile: str, hour: int = 10) -> dict:
+def validate_path_csp(path: list[str], profile: str, hour: int = 10, hospital: str = "charite") -> dict:
     """
     Run full CSP validation on a proposed path:
       1. Forward checking: check each node before committing
@@ -217,7 +229,8 @@ def validate_path_csp(path: list[str], profile: str, hour: int = 10) -> dict:
     # Edge checks
     if fc_ok:
         import networkx as nx
-        G = build_graph("staff")
+        _, _, build_graph_fn = _get_graph_fns(hospital)
+        G = build_graph_fn("staff")
         for i in range(len(path) - 1):
             u, v = path[i], path[i+1]
             step += 1
@@ -242,7 +255,7 @@ def validate_path_csp(path: list[str], profile: str, hour: int = 10) -> dict:
                 break
 
     # AC-3 pass (only if forward check passed)
-    ac3_consistent, arc_log = (True, []) if not fc_ok else ac3(path, profile, hour)
+    ac3_consistent, arc_log = (True, []) if not fc_ok else ac3(path, profile, hour, hospital)
 
     overall = fc_ok and ac3_consistent
     return {

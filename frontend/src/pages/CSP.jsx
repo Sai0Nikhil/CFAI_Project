@@ -1,30 +1,35 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { validateCSP, timeWindow, runSearch, getNodes } from '../api'
-import { useEffect } from 'react'
+import AIInsight from '../components/AIInsight'
+import { useAI } from '../context/AIContext'
 
 const PROFILES = [{v:'staff',l:'🩺 Staff'},{v:'emergency',l:'🚨 Emergency'},{v:'visitor',l:'👤 Visitor'},{v:'patient',l:'♿ Patient'}]
 
 export default function CSP() {
+  const { hospital, hospitalInfo } = useAI()
   const [nodes, setNodes]   = useState([])
   const [prof, setProf]     = useState('visitor')
-  const [start, setStart]   = useState('ENTRANCE_MAIN')
-  const [goal, setGoal]     = useState('Node_302_ICU_Tower')
+  const [start, setStart]   = useState(hospitalInfo?.defaultStart || 'ENTRANCE_MAIN')
+  const [goal, setGoal]     = useState(hospitalInfo?.defaultGoal  || 'Node_302_ICU_Tower')
   const [hour, setHour]     = useState(10)
   const [result, setResult] = useState(null)
   const [tw, setTw]         = useState(null)
   const [loading, setLoading] = useState(false)
+  const [aiTrigger, setAiTrigger] = useState(0)
 
-  useEffect(()=>{ getNodes().then(r=>setNodes(r.data)) },[])
+  useEffect(()=>{ getNodes(hospital).then(r=>setNodes(r.data)) },[hospital])
+  useEffect(()=>{ setStart(hospitalInfo?.defaultStart||'ENTRANCE_MAIN'); setGoal(hospitalInfo?.defaultGoal||'Node_302_ICU_Tower') },[hospital])
 
   const doValidate = async () => {
     setLoading(true); setResult(null)
     try {
       // First find path, then validate it
-      const sr = await runSearch({algorithm:'astar', profile:prof, start, goal})
+      const sr = await runSearch({algorithm:'astar', profile:prof, start, goal, hospital})
       const path = sr.data.path
       if (!path?.length) { setResult({path_found:false}); setLoading(false); return }
-      const r = await validateCSP({path, profile:prof, hour})
+      const r = await validateCSP({path, profile:prof, hour, hospital})
       setResult({...r.data, path, cost:sr.data.cost})
+      setAiTrigger(t => t + 1)
     } catch(e) { alert('CSP error: '+e.message) }
     setLoading(false)
   }
@@ -123,6 +128,12 @@ export default function CSP() {
                 </table>
               </div>
 
+              <AIInsight
+                module="csp"
+                trigger={aiTrigger}
+                context={{ profile:prof, overall_valid:result.overall_valid,
+                  path:result.path, violations:result.violations, trace:result.trace }}
+              />
               <div className="section-label">🧩 CSP Explainability</div>
               <div className="card card-sm" style={{fontSize:'.84rem',lineHeight:1.7}}>
                 <p><strong>Backtracking:</strong> tried all paths for profile <code>{prof}</code>, pruning restricted nodes.</p>
