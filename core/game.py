@@ -295,6 +295,261 @@ def run_game(
     }
 
 
+def minimax_not_named_yet(
+    G,
+    node: str,
+    goal: str,
+    depth: int,
+    is_max: bool,
+    alpha: float,
+    beta: float,
+    travel_cost: float,
+    congestion: int,
+    trace: list,
+    prune_log: list,
+    depth_limit: int,
+    sensor_readings: dict,
+    time_of_day: str,
+    use_llm_value: bool,
+    api_key: str,
+    provider: str,
+    model: str,
+) -> float:
+    # Local import to avoid circular dependency
+    from core.mcts import bayes_prior, _llm_value
+
+    indent = "  " * (depth_limit - depth)
+
+    def _jsafe(v):
+        if v == math.inf:      return "inf"
+        if v == -math.inf:     return "-inf"
+        return round(v, 2)
+
+    # Terminal: goal reached
+    if node == goal:
+        score = 200.0 - travel_cost
+        trace.append({
+            "depth": depth_limit - depth,
+            "node": node,
+            "is_max": is_max,
+            "score": score,
+            "alpha": _jsafe(alpha),
+            "beta": _jsafe(beta),
+            "note": f"{indent}🎯 GOAL REACHED  score={score:.1f}",
+        })
+        return score
+
+    # Terminal: depth limit
+    if depth == 0:
+        if use_llm_value and api_key:
+            score = _llm_value(node, goal, congestion, travel_cost, is_max, api_key, provider, model)
+            if score == 0.0:  # fallback
+                score = evaluate(node, goal, congestion, travel_cost)
+            note_type = "🤖 LLM evaluation"
+        else:
+            score = evaluate(node, goal, congestion, travel_cost)
+            note_type = "📊 Heuristic evaluation"
+
+        trace.append({
+            "depth": depth_limit - depth,
+            "node": node,
+            "is_max": is_max,
+            "score": score,
+            "alpha": _jsafe(alpha),
+            "beta": _jsafe(beta),
+            "note": f"{indent}{note_type} score={score:.1f} | cong={congestion}",
+        })
+        return score
+
+    successors = get_successors(G, node, congestion, is_max)
+    if not successors:
+        score = evaluate(node, goal, congestion, travel_cost)
+        return score
+
+    # ── AI Guidance Move Ordering ──
+    # Sort moves based on Bayesian clearing priors to evaluate best moves first
+    # This maximizes alpha-beta pruning rates
+    successors_with_priors = []
+    for next_node, next_cong, edge_cost, move_desc in successors:
+        prior = bayes_prior(next_node, sensor_readings, time_of_day)
+        successors_with_priors.append((prior, (next_node, next_cong, edge_cost, move_desc)))
+
+    # MAX wants clear paths first (higher low-occupancy prior first)
+    # MIN wants congested paths first (lower low-occupancy prior first)
+    successors_with_priors.sort(key=lambda x: x[0], reverse=is_max)
+    successors = [x[1] for x in successors_with_priors]
+
+    if is_max:
+        value = -math.inf
+        for next_node, next_cong, edge_cost, move_desc in successors:
+            child_val = minimax_not_named_yet(
+                G, next_node, goal, depth - 1, False,
+                alpha, beta, travel_cost + edge_cost, next_cong,
+                trace, prune_log, depth_limit,
+                sensor_readings, time_of_day, use_llm_value, api_key, provider, model
+            )
+            trace.append({
+                "depth": depth_limit - depth,
+                "node": node,
+                "is_max": True,
+                "move": move_desc,
+                "child_val": round(child_val, 2),
+                "alpha": _jsafe(alpha),
+                "beta": _jsafe(beta),
+                "note": f"{indent}MAX (Ordered): '{move_desc}' → val={child_val:.1f}",
+            })
+            if child_val > value:
+                value = child_val
+            alpha = max(alpha, value)
+            if beta <= alpha:
+                prune_log.append({
+                    "node": node,
+                    "depth": depth_limit - depth,
+                    "alpha": _jsafe(alpha),
+                    "beta": _jsafe(beta),
+                    "note": f"{indent}✂️  PRUNE (β={beta:.1f} ≤ α={alpha:.1f}) — AI ordered branch pruned",
+                })
+                break
+        return value
+
+    else:  # MIN
+        value = math.inf
+        for next_node, next_cong, edge_cost, move_desc in successors:
+            child_val = minimax_not_named_yet(
+                G, next_node, goal, depth - 1, True,
+                alpha, beta, travel_cost + edge_cost, next_cong,
+                trace, prune_log, depth_limit,
+                sensor_readings, time_of_day, use_llm_value, api_key, provider, model
+            )
+            trace.append({
+                "depth": depth_limit - depth,
+                "node": node,
+                "is_max": False,
+                "move": move_desc,
+                "child_val": round(child_val, 2),
+                "alpha": _jsafe(alpha),
+                "beta": _jsafe(beta),
+                "note": f"{indent}MIN (Ordered): '{move_desc}' → val={child_val:.1f}",
+            })
+            if child_val < value:
+                value = child_val
+            beta = min(beta, value)
+            if beta <= alpha:
+                prune_log.append({
+                    "node": node,
+                    "depth": depth_limit - depth,
+                    "alpha": _jsafe(alpha),
+                    "beta": _jsafe(beta),
+                    "note": f"{indent}✂️  PRUNE (β={beta:.1f} ≤ α={alpha:.1f}) — AI ordered branch pruned",
+                })
+                break
+        return value
+
+
+def run_not_named_yet(
+    start: str = "BH_Lobby",
+    goal: str = "Node_302_ICU_Tower",
+    depth_limit: int = 4,
+    profile: str = "emergency",
+    time_of_day: Optional[str] = None,
+    sensor_readings: Optional[dict] = None,
+    api_key: str = "",
+    provider: str = "claude",
+    model: str = "claude-3-haiku-20240307",
+    use_llm_value: bool = False,
+    hospital: str = "charite",
+) -> dict:
+    build_graph_fn, _, _ = _get_graph_fns(hospital)
+    G = build_graph_fn(profile)
+    if start not in G or goal not in G:
+        return {"error": f"Node {start} or {goal} not in graph for profile '{profile}'"}
+
+    trace: list[dict] = []
+    prune_log: list[dict] = []
+    sensors = sensor_readings or {}
+
+    trace.append({
+        "depth": 0,
+        "node": start,
+        "is_max": True,
+        "note": f"🧠 START 'Not Named Yet' depth={depth_limit} | AI-Guided Move Ordering + Alpha-Beta",
+        "alpha": "-inf",
+        "beta": "inf",
+    })
+
+    best_val = minimax_not_named_yet(
+        G, start, goal, depth_limit, True,
+        -math.inf, math.inf, 0.0, 0,
+        trace, prune_log, depth_limit,
+        sensors, time_of_day, use_llm_value, api_key, provider, model
+    )
+
+    # Trace best path using backpropagated values
+    path = [start]
+    curr = start
+    curr_cong = 0
+    curr_cost = 0.0
+    depth = 0
+    visited = {start}
+
+    while curr != goal and depth < depth_limit * 2:
+        depth += 1
+        successors = get_successors(G, curr, curr_cong, True)
+        if not successors:
+            break
+
+        best_next = None
+        best_score = -math.inf
+        for next_node, next_cong, cost, desc in successors:
+            if next_node in visited:
+                continue
+            node_entries = [t for t in trace if t.get("node") == next_node and t.get("depth") == depth]
+            score = node_entries[-1]["child_val"] if node_entries and "child_val" in node_entries[-1] else evaluate(next_node, goal, next_cong, curr_cost + cost)
+            if score > best_score:
+                best_score = score
+                best_next = (next_node, next_cong, cost)
+
+        if not best_next:
+            break
+        curr, curr_cong, cost = best_next
+        path.append(curr)
+        visited.add(curr)
+        curr_cost += cost
+
+    branching = max(len(list(G.neighbors(n))) for n in list(G.nodes)[:5])
+    full_nodes = branching ** depth_limit
+
+    return {
+        "best_value": round(best_val, 2),
+        "best_path": path,
+        "best_cost": round(curr_cost, 1),
+        "path": path,
+        "cost": round(curr_cost, 1),
+        "trace": trace,
+        "prune_log": prune_log,
+        "stats": {
+            "depth_limit": depth_limit,
+            "pruning_events": len(prune_log),
+            "trace_steps": len(trace),
+            "estimated_full_nodes": full_nodes,
+        },
+        "bounded_rationality": (
+            f"Evaluated with depth limit {depth_limit}. "
+            f"Move ordering prioritizes nodes with clear Bayesian priors, maximizing alpha-beta cuts."
+        ),
+        "explanation": (
+            f"The hybrid 'Not Named Yet' algorithm achieved a score of {best_val:.1f}. "
+            f"Evaluating clear paths first allowed alpha-beta pruning to cut {len(prune_log)} branches."
+        ),
+        "not_named_yet_note": (
+            "This implements your proposed Hybrid AI-Guided Minimax: "
+            "Bayesian Network priors act as System 1 (instinctively ordering moves to inspect best directions first), "
+            "while the Minimax tree acts as System 2 (rigorously calculating plies ahead). "
+            "The LLM evaluates leaves, providing expert judgment at the lookahead horizon."
+        )
+    }
+
+
 if __name__ == "__main__":
     result = run_game(depth_limit=3)
     print(f"Best value: {result['best_value']}")

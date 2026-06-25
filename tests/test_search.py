@@ -33,7 +33,7 @@ def test_bfs_returns_trace():
 # ── DFS ──────────────────────────────────────────────────────────────────────
 
 def test_dfs_finds_path():
-    result = dfs(G_STAFF, "ENTRANCE_MAIN", "HW_Admin")
+    result = dfs(G_STAFF, "ENTRANCE_MAIN", "BH_F21_Admin")
     assert len(result["path"]) > 0
 
 def test_dfs_path_valid_edges():
@@ -85,3 +85,16 @@ def test_run_search_returns_graph():
 def test_run_search_emergency_full_access():
     result = run_search("astar", "emergency", "ENTRANCE_MAIN", "Node_302_ICU_Tower")
     assert len(result["path"]) > 0, "Emergency should always reach ICU"
+
+def test_cooperative_astar():
+    from core.multi_agent import cooperative_astar
+    agents = [
+        {"id": "A1", "name": "Ambulance 1", "start": "ENTRANCE_MAIN", "goal": "Node_302_ICU_Tower", "priority": "critical"},
+        {"id": "A2", "name": "Ambulance 2", "start": "Node_302_ICU_Tower", "goal": "ENTRANCE_MAIN", "priority": "urgent"}
+    ]
+    res = cooperative_astar(hospital="charite", agents_config=agents, coordination_enabled=True)
+    assert res["success"] is True
+    assert len(res["timesteps"]) > 0
+    assert res["metrics"]["makespan"] > 0
+    assert not any("💥" in log for log in res["collision_log"])
+

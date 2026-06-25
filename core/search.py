@@ -315,7 +315,7 @@ def astar(G: nx.Graph, start: str, goal: str) -> dict:
 # Convenience runner
 # ────────────────────────────────────────────────────────────────────────────
 
-def run_search(algorithm: str, profile: str, start: str, goal: str, hospital: str = "charite") -> dict:
+def run_search(algorithm: str, profile: str, start: str, goal: str, hospital: str = "charite", blocked_nodes: list[str] = None, blocked_edges: list[list[str]] = None) -> dict:
     """
     Unified entry point.
 
@@ -325,6 +325,28 @@ def run_search(algorithm: str, profile: str, start: str, goal: str, hospital: st
     """
     build_graph, heuristic = _get_graph_fns(hospital)
     G = build_graph(profile)
+
+    # Filter blocked nodes
+    if blocked_nodes:
+        if start in blocked_nodes or goal in blocked_nodes:
+            return {
+                "path": [],
+                "cost": 0,
+                "trace": [{"step": 1, "action": "BLOCKED", "node": start if start in blocked_nodes else goal, "note": "Start or Goal location is currently blocked!"}],
+                "stats": {"expansions": 0, "peak_frontier": 0},
+                "algorithm": algorithm.upper(),
+                "profile": profile,
+                "start": start,
+                "goal": goal
+            }
+        G.remove_nodes_from([n for n in blocked_nodes if n in G])
+
+    # Filter blocked edges
+    if blocked_edges:
+        for u, v in blocked_edges:
+            if G.has_edge(u, v):
+                G.remove_edge(u, v)
+
     fn = {"bfs": bfs, "dfs": dfs, "ucs": ucs, "astar": astar}[algorithm]
     result = fn(G, start, goal)
     result["graph"] = G

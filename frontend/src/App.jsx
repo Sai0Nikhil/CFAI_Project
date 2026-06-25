@@ -8,6 +8,7 @@ import Game from './pages/Game'
 import Bayesian from './pages/Bayesian'
 import NLP from './pages/NLP'
 import AILab from './pages/AILab'
+import Ideas from './pages/Ideas'
 
 export default function App() {
   return (
@@ -23,6 +24,7 @@ export default function App() {
             <Route path="/csp" element={<CSP />} />
             <Route path="/game" element={<Game />} />
             <Route path="/bayesian" element={<Bayesian />} />
+            <Route path="/ideas" element={<Ideas />} />
             <Route path="/nlp" element={<NLP />} />
           </Routes>
         </main>
@@ -30,3 +32,4 @@ export default function App() {
     </BrowserRouter>
   )
 }
+

@@ -27,6 +27,17 @@ export function AIProvider({ children }) {
   const [apiKey,   setApiKey]   = useState('')
   const [model,    setModel]    = useState('claude-3-haiku-20240307')
   const [hospital, setHospital] = useState('charite')   // ← NEW
+  const [blockedNodes, setBlockedNodes] = useState([])   // list of blocked node IDs
+
+  const toggleBlockedNode = (nodeId) => {
+    setBlockedNodes(prev =>
+      prev.includes(nodeId)
+        ? prev.filter(id => id !== nodeId)
+        : [...prev, nodeId]
+    )
+  }
+
+  const clearBlockedNodes = () => setBlockedNodes([])
 
   const MODELS = {
     claude: [
@@ -53,6 +64,7 @@ export function AIProvider({ children }) {
       hospital, setHospital,   // ← NEW
       hospitalInfo,             // ← NEW
       HOSPITALS,                // ← NEW
+      blockedNodes, toggleBlockedNode, clearBlockedNodes, // ← NEW
     }}>
       {children}
     </AIContext.Provider>

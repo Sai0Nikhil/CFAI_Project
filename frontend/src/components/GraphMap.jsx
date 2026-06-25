@@ -55,32 +55,31 @@ export default function GraphMap({ profile = 'staff', path = [], start = '', goa
         const isStart = n.id === start
         const isGoal  = n.id === goal
 
-        // In pathOnly mode, non-path nodes become nearly invisible
-        const hidden = pathOnly && !onPath && !isStart && !isGoal
+        // Hide completely if there is an active path and this node is not part of it
+        const hideNode = (pathOnly || path.length > 0) && !onPath && !isStart && !isGoal
 
         const color = isStart ? '#f59e0b'
                     : isGoal  ? '#ef4444'
                     : onPath  ? '#22c55e'
-                    : hidden  ? '#f0ede8'   // matches background — invisible
                     : nodeColor(n.type)
 
         return {
           id:    n.id,
           label: n.label.replace(/_/g,' ').replace(/\s+/g,' '),
+          hidden: hideNode,
           color: {
             background: color,
-            border: hidden  ? '#f0ede8'
-                  : isStart ? '#92400e'
+            border: isStart ? '#92400e'
                   : isGoal  ? '#7f1d1d'
                   : onPath  ? '#166534'
                   : '#c4a882',
             highlight: { background: '#fef3c7', border: '#b45309' },
             hover:     { background: '#fef3c7', border: '#b45309' },
           },
-          size:        isStart||isGoal ? 28 : onPath ? 20 : hidden ? 3 : 8,
+          size:        isStart||isGoal ? 28 : onPath ? 20 : 8,
           font: {
-            size:  isStart||isGoal ? 13 : onPath ? 11 : hidden ? 0 : 8,
-            color: isStart||isGoal ? '#111827' : onPath ? '#111827' : hidden ? '#f0ede8' : '#6b7280',
+            size:  isStart||isGoal ? 13 : onPath ? 11 : 8,
+            color: isStart||isGoal ? '#111827' : onPath ? '#111827' : '#6b7280',
             face:  'Inter, system-ui, sans-serif',
             bold:  onPath || isStart || isGoal,
             background: onPath ? 'rgba(255,255,255,0.85)' : undefined,
@@ -108,16 +107,20 @@ export default function GraphMap({ profile = 'staff', path = [], start = '', goa
         const key1  = `${e.source}||${e.target}`
         const key2  = `${e.target}||${e.source}`
         const onPath = pathEdges.has(key1) || pathEdges.has(key2)
+
+        const hideEdge = (pathOnly || path.length > 0) && !onPath
+
         return {
           id:     i,
           from:   e.source,
           to:     e.target,
+          hidden: hideEdge,
           color:  {
-            color:     onPath ? '#f59e0b' : pathOnly ? '#f0ede8' : '#ddd0bb',
+            color:     onPath ? '#f59e0b' : '#ddd0bb',
             highlight: '#b45309',
             hover:     '#b45309',
           },
-          width:  onPath ? 6 : pathOnly ? 0.3 : 1,
+          width:  onPath ? 6 : 1,
           arrows: onPath ? { to: { enabled:true, scaleFactor:.8, type:'arrow' } } : {},
           title:  `<div style="font-family:Inter,sans-serif;padding:4px 8px;font-size:11px">
                     ${e.via || 'passage'} · <b>${e.weight}s</b>

@@ -34,3 +34,15 @@ def test_game_emergency_profile():
     result = run_game(start="BH_Lobby", goal="Node_302_ICU_Tower",
                       depth_limit=2, profile="emergency")
     assert "error" not in result
+
+def test_game_not_named_yet():
+    from core.game import run_not_named_yet
+    result = run_not_named_yet(start="BH_Lobby", goal="Node_302_ICU_Tower", depth_limit=2)
+    assert "best_value" in result
+    assert "error" not in result
+
+def test_game_mcts():
+    from core.mcts import run_mcts_game
+    result = run_mcts_game(start="BH_Lobby", goal="Node_302_ICU_Tower", num_simulations=10, depth_limit=2)
+    assert "path" in result
+    assert "error" not in result

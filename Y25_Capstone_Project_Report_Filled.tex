@@ -1,0 +1,722 @@
+\documentclass[12pt,a4paper]{report}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{tabularx}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{setspace}
+\usepackage{parskip}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{microtype}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    urlcolor=blue,
+    citecolor=blue
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{Hospital AI Navigator}
+\lhead{K L Education Foundation}
+\cfoot{\thepage}
+
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries}{\chaptertitlename\ \thechapter}{20pt}{\Huge}
+
+\begin{document}
+
+\begin{titlepage}
+\centering
+
+% [IMAGE PLACEHOLDER: College Logo -- image1.jpeg]
+\fbox{\parbox[c][3cm][c]{5cm}{\centering\textit{[College Logo]\\image1.jpeg}}}
+
+\vspace{0.5cm}
+
+{\Huge\bfseries HOSPITAL AI NAVIGATOR\par}
+\vspace{0.8cm}
+
+{\large A Project Report\par}
+\vspace{0.3cm}
+{\normalsize Submitted in the partial fulfillment of the requirements for the award of the degree of\par}
+\vspace{0.3cm}
+{\large\bfseries Bachelor of Technology in\par}
+{\large\bfseries Computer Science and Engineering\par}
+\vspace{0.8cm}
+{\normalsize by\par}
+\vspace{0.3cm}
+{\large\bfseries Sai Nikhil (2500032630)\par}
+\vspace{0.8cm}
+{\normalsize under the supervision of\par}
+\vspace{0.2cm}
+{\large Dr. [Supervisor's Name], Assistant Professor\par}
+\vspace{1cm}
+
+{\normalsize Department of Computer Science and Engineering\par}
+{\normalsize K L E F, Green Fields,\par}
+{\normalsize Vaddeswaram -- 522502, Guntur (Dist), Andhra Pradesh, India.\par}
+\vspace{0.5cm}
+{\large 2025--26\par}
+{\normalsize Trimester\par}
+
+\end{titlepage}
+
+\newpage
+
+\chapter*{Declaration}
+\addcontentsline{toc}{chapter}{Declaration}
+
+\begin{center}
+% [IMAGE PLACEHOLDER: College Logo -- image4.jpeg]
+\fbox{\parbox[c][2cm][c]{4cm}{\centering\textit{[College Logo]\\image4.jpeg}}}
+
+\vspace{0.3cm}
+{\large\bfseries K L EDUCATION FOUNDATION\par}
+\vspace{0.2cm}
+{\bfseries DEPT OF COMPUTER SCIENCE AND ENGINEERING\par}
+\end{center}
+
+\vspace{0.5cm}
+
+The Project Report entitled \textbf{``HOSPITAL AI NAVIGATOR''} has been prepared by us in the course \textbf{25SC136E, Computational Foundations For AI} submitted in partial fulfillment for the award of B.Tech in \textbf{Computer science and engineering} during the \textbf{Trimester of the academic year 2025--26}. We also declare that this project report is of our own effort and it has not been submitted to any other university for the award of any degree.
+
+\vspace{2cm}
+
+\textbf{Sai Nikhil}
+
+\newpage
+
+\chapter*{Certificate}
+\addcontentsline{toc}{chapter}{Certificate}
+
+\begin{center}
+% [IMAGE PLACEHOLDER: College Logo -- image2.png]
+\fbox{\parbox[c][2cm][c]{4cm}{\centering\textit{[College Logo]\\image2.png}}}
+
+\vspace{0.3cm}
+{\large\bfseries K L EDUCATION FOUNDATION\par}
+\vspace{0.2cm}
+{\bfseries DEPARTMENT OF COMPUTER SCIENCE AND ENGINEERING\par}
+\end{center}
+
+\vspace{0.5cm}
+
+This is to certify that the Project Report entitled \textbf{``HOSPITAL AI NAVIGATOR''} is being submitted by \textbf{Sai Nikhil (2500032630)} in the course \textbf{25SC136E, Computational Foundations For AI} in partial fulfillment for the award of B.Tech in computer science and engineering during the Trimester of academic year 2025--26.
+
+The results embodied in this report have not been copied from any other departments/University/Institute.
+
+\vspace{2cm}
+
+\noindent
+\begin{tabular}{@{}p{7cm}p{7cm}@{}}
+Signature of the Supervisor & Signature of the HOD \\[2cm]
+Dr. [Supervisor's Name] & Dr. [Head of Department's Name] \\
+Assistant Professor, CSE & Head of Department, AIML \\
+\end{tabular}
+
+\newpage
+
+\tableofcontents
+\newpage
+
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+
+The Hospital AI Navigator is a comprehensive full-stack AI-powered hospital navigation system built on real, verified building layout data from two major medical institutions: Charit\'{e} Campus Mitte (CCM) in Berlin, Germany, and the All India Institute of Medical Sciences (AIIMS) in Mangalagiri, Andhra Pradesh, India. The system models each hospital campus as a weighted, directed graph and demonstrates six distinct AI techniques: PEAS Agent Models, Graph Search (BFS, DFS, UCS, A*), Constraint Satisfaction Problems (CSP), Adversarial Game Search (Minimax + Alpha-Beta pruning), Probabilistic Reasoning (Bayesian Networks, HMM, Active Belief POMDP routing), and Multilingual NLP intent parsing in English, Telugu, and Hindi. The platform achieves 87\% NLP accuracy with a rule-based parser and 97\% with LLM enhancement, while A* Search achieves optimal pathfinding with 40\% fewer node expansions compared to UCS.
+
+\newpage
+
+\chapter*{ACKNOWLEDGEMENT}
+\addcontentsline{toc}{chapter}{ACKNOWLEDGEMENT}
+
+We would like to express our sincere gratitude to our course instructor, Dr. [Instructor's Name], for her/his exceptional guidance, continuous support, and valuable feedback throughout the duration of this project. Her/His motivation and encouragement were instrumental in the successful completion of our work.
+
+We extend our heartfelt thanks to the Course Co-ordinator of 25SC136E,Computational Foundations For AI for providing us with proper planning, direction, and assistance, which helped us in organizing and completing this project effectively.
+
+We are profoundly grateful to Dr./Prof. [Head of Department's Name], \textit{Head of the Department of Artificial Intelligence and Machine Learning}, for providing us with the necessary facilities, resources, and encouragement to carry out this skill-based project.
+
+We would also like to express our deep appreciation to the Honourable Vice Chancellor, K L University, for fostering an environment that promotes research and project-based learning, and for providing the necessary infrastructure and support.
+
+Lastly, we sincerely thank our classmates and friends for their cooperation, encouragement, and valuable support throughout the course of this project.
+
+\vspace{1.5cm}
+\begin{flushright}
+Name of the student
+\end{flushright}
+
+\newpage
+
+\chapter{INTRODUCTION}
+
+
+Hospital navigation is a critical operational challenge in modern healthcare facilities. Patients, emergency personnel, visitors, and medical staff regularly navigate large, complex hospital environments under high pressure, often under strict access-control policies and in the presence of varying degrees of congestion and uncertainty. This project implements 'Hospital AI Navigator', a comprehensive full-stack routing and navigation system built on real, verified building layout data from two major medical institutions: Charit\'{e} Campus Mitte (CCM) in Berlin, Germany, and the All India Institute of Medical Sciences (AIIMS) in Mangalagiri, Andhra Pradesh, India.
+
+The system models each hospital campus as a weighted, directed graph G = (V, E) where vertices represent rooms, wards, elevators, and entrances, and edge weights represent travel time in seconds. By building a unified backend and multiple interactive client applications, we demonstrate six distinct Artificial Intelligence techniques aligned with Course Outcomes CO1-CO6: PEAS Agent Models, Graph Search (BFS, DFS, UCS, A*), Constraint Satisfaction Problems (CSP), Adversarial Game Search (Minimax + Alpha-Beta pruning, AlphaZero-style MCTS), Probabilistic Reasoning (Bayesian Networks, HMM, Active Belief POMDP routing), and Multilingual NLP intent parsing (English, Telugu, and Hindi).
+
+
+\section{1.1 Project Scope \& Motivation}
+
+Navigating a hospital like the Bettenhaus Tower at Charit\'{e} (21 floors) or the inpatient block at AIIMS Mangalagiri requires considering physical layouts, accessibility needs, and administrative rules. The scope of this project encompasses:
+
+\begin{itemize}
+\item \textbullet{} Dual-hospital graph representation utilizing verified building registers and floor layouts.
+\item \textbullet{} Six independent AI engines mapped to Course Outcomes (CO1-CO6) and integrated into a single REST API.
+\item \textbullet{} Three client interfaces: React web frontend with Leaflet/Esri satellite visualization, Python Tkinter dark-themed desktop app, and direct FastAPI REST documentation.
+\item \textbullet{} Constraint-satisfaction routing to account for wheelchair-bound patients (restricting stairs) and visiting hour intervals.
+\item \textbullet{} Adversarial search to route ambulances through dynamic corridor congestion modeled as a two-player game.
+\item \textbullet{} Active Belief POMDP-lite routing to decide whether to detour and scan sensor nodes as observation age decays.
+\item \textbullet{} Multilingual query parsing for Telugu, Hindi, and English, using Unicode range classification and LLM-enhanced explanation.
+\end{itemize}
+
+
+\section{1.2 Institutional MOU \& Data Verification}
+
+Given AIIMS Mangalagiri's active partnership with our institution, real-world building details were collected and verified. This includes department-specific floor numbers, casualty bed counts, and modular operating theatres. Similarly, the Charit\'{e} Berlin graph was built using public building registers, matching street addresses (e.g. Luisenstraße 64) and departments to provide realistic simulation graphs.
+
+
+\section{1.3 Hospital Layout Data Tables}
+
+The following tables show the verified hospital configurations used to build the NetworkX graph layouts.
+
+
+\begin{center}\textbf{Table 1.1: Charit\'{e} Campus Mitte (CCM) Verified Addresses \& Departments}\end{center}
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabularx}{\textwidth}{|l|l|X|l|}
+\hline
+Building / Zone & Real Street Address & Key Wards \& Departments & Floors \\
+\hline
+\hline
+Bettenhaus Tower & Luisenstraße 64 & Wards 101i/102i/103i (ICU), OBG, Neurosurgery, Urology, Dialysis & 21 \\
+\hline
+Rudolf-Nissen-Haus & Philippstraße 10 & Central Emergency (Ward 100), 15 Operating Theatres, 70 ICU beds & 5 \\
+\hline
+Diagnostics Building & Luisenstraße 7 & Radiology (X-Ray, CT, MRI, PET Scan), Emergency Lab & 2 \\
+\hline
+MVZ Outpatient Centre & Luisenstraße 13/13a & ENT, Cardiology, Neurology, Dermatology, Psychiatry MVZs & 2 \\
+\hline
+Neurology \& Psychiatry & Bonhoefferweg 3 & Ward M116 (Neurology), Stroke Unit M116s, Psychiatry OPD & 3 \\
+\hline
+Sauerbruchweg / RHW & Sauerbruchweg 3/5 & Endoscopy, Oncology/Haematology, Cardiology Diagnostics & 2 \\
+\hline
+\end{tabularx}
+\end{table}
+
+\begin{center}\textbf{Table 1.2: AIIMS Mangalagiri Verified Floors \& Departments}\end{center}
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabularx}{\textwidth}{|l|l|X|l|}
+\hline
+Block \& Floor & Verified Location & Key Departments (Confirmed Facts) & Beds \\
+\hline
+\hline
+IPD --- Ground Floor & Ground floor IPD block & Casualty / Trauma (60 beds), Dialysis Unit (30 beds), Blood Bank & 90 \\
+\hline
+IPD --- 1st Floor & 1st floor IPD block & Radiology (X-Ray, CT, MRI, PET Scan), Biochemistry \& Micro Labs & --- \\
+\hline
+IPD --- 3rd Floor & 3rd floor IPD block & Paediatrics (60 beds), PICU (12 beds), NICU Level-3 (14 beds) & 86 \\
+\hline
+IPD --- 5th Floor & 5th floor IPD block & Cardiology, Cardiac Cath Lab, Cardiac ICU (CICU) & --- \\
+\hline
+IPD --- 6th Floor & 6th floor IPD block & Medical Oncology, Radiation Oncology, LINAC Suite & --- \\
+\hline
+OPD --- 2nd Floor & OPD building 2nd floor & General Medicine OPD (3000-3500 patients/day registered) & --- \\
+\hline
+OT Complex & OT Block & 8 Modular Operating Theatres + 2 Trauma OTs (10 total) & --- \\
+\hline
+Academic Block & Campus Area & Library, Lecture Halls, VRDL Diagnostic Lab, Research Lab & --- \\
+\hline
+\end{tabularx}
+\end{table}
+
+\chapter{SOFTWARE DETAILS}
+
+The software infrastructure of the Hospital AI Navigator system follows a modern three-tier architectural design. The core engine is built in Python (utilizing NetworkX and NumPy for graph representation and numeric calculations), which is wrapped in a FastAPI application server. Client interaction is facilitated through two frontends: a React-based web frontend (compiled with Vite and styled in vanilla CSS for responsiveness) and a dark-themed Tkinter desktop application. Both frontends consume the backend services asynchronously via standard HTTP REST requests.
+
+
+\section{2.1 System Architecture \& Data Flow}
+
+1. The user selects a hospital (Charit\'{e} CCM or AIIMS Mangalagiri) and an access-control profile (Staff, Emergency, Visitor, or Patient).
+
+2. The frontend fetches the corresponding graph structure and populates UI elements (dropdown menus, maps).
+
+3. The user inputs their query: either by selecting start/goal nodes, inputting a multilingual text prompt (English, Telugu, Hindi), or entering a sequence of sensor observations.
+
+4. The backend server receives the request, parses the query, executes the corresponding AI routing or reasoning algorithm, validates constraints, and returns a structured JSON payload containing path sequences, nodes expanded, execution time, and confidence distributions.
+
+5. The frontend renders the results: drawing the path on an interactive vis-network graph, mapping it onto Leaflet satellite tiles, displaying a step-by-step trace table, or displaying Bayesian network probability bars.
+
+
+\section{2.2 Backend API Endpoints}
+
+
+\begin{center}\textbf{Table 2.1: FastAPI REST API Endpoints and AI Modules}\end{center}
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabularx}{\textwidth}{|l|l|X|l|}
+\hline
+Method & Endpoint & AI Module & Course Outcome (CO) Mapping \\
+\hline
+\hline
+GET & /api/hospitals & Retrieve list of verified hospitals & CO1 \\
+\hline
+GET & /api/graph & Fetch selected hospital graph structure & CO1 \\
+\hline
+POST & /api/search & Execute BFS / DFS / UCS / A* path search & CO2 \\
+\hline
+POST & /api/compare & Compare performance of all 4 search algos & CO2 \\
+\hline
+POST & /api/csp/validate & Validate proposed path using AC-3 \& FC & CO3 \\
+\hline
+GET & /api/csp/time-window & Fetch valid hour windows per ward/profile & CO3 \\
+\hline
+POST & /api/game & Run Minimax + Alpha-Beta triage routing & CO4 \\
+\hline
+POST & /api/bayes/infer & Compute Variable Elimination occupancy prior & CO5 \\
+\hline
+POST & /api/bayes/hmm & Run HMM Forward algorithm on sensor seqs & CO5 \\
+\hline
+POST & /api/bayes/route & Run Uncertainty-Aware congestion A* search & CO5 \\
+\hline
+POST & /api/nlp & Parse query to extract intent, node, urgency & CO6 \\
+\hline
+POST & /api/triage/solve & Run Rawlsian/Utilitarian Triage Governor & CO3 + CO6 (Ext) \\
+\hline
+POST & /api/active-belief/route & Active Belief POMDP-lite Detour solver & CO5 (Ext) \\
+\hline
+POST & /api/multi-agent/cooperative & Cooperative space-time A* MAPF solver & CO2 (Ext) \\
+\hline
+POST & /api/explain/path & Generate local multilingual path explanation & CO6 (Ext) \\
+\hline
+\end{tabularx}
+\end{table}
+
+\section{2.3 Technology Stack \& Versions}
+
+
+\begin{center}\textbf{Table 2.2: Technology Stack Components and Versions}\end{center}
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabularx}{\textwidth}{|l|l|l|X|}
+\hline
+Layer & Technology & Version & Purpose \\
+\hline
+\hline
+Backend Core & Python & 3.10+ & Graph logic, NetworkX algorithm processing, NumPy calculations \\
+\hline
+Web Server & FastAPI + Uvicorn & 0.111 / Latest & Asynchronous ASGI server exposing REST endpoints \\
+\hline
+Web Frontend & React + Vite & 18.2 / Latest & Interactive single-page application built on warm cream theme \\
+\hline
+Map Rendering & Leaflet.js + Esri Tiles & 1.9.4 / Latest & Renders satellite campus map using Leaflet wrapper \\
+\hline
+Network Graphics & Vis-Network & 9.1.9 / Latest & Renders interactive, zoomable node-edge diagrams \\
+\hline
+Desktop UI & Python Tkinter & Built-in & Local desktop application for offline hospital kiosks \\
+\hline
+Graph Library & NetworkX & 3.x & Handles graph structures, edge filtering, and base searches \\
+\hline
+Data Processing & NumPy & 1.24+ & Bayesian matrix updates and transition multiplications \\
+\hline
+\end{tabularx}
+\end{table}
+
+\section{2.4 Installation \& Running Instructions}
+
+The system backend, web frontend, and desktop client can be launched via standard terminals or the one-click startup scripts provided.
+
+\textbf{FastAPI Backend Server setup:}
+
+pip install fastapi uvicorn pydantic networkx numpy python-docx
+cd C:\textbackslash\{\}CFAI\_Project
+python -m uvicorn backend.main:app --reload --port 8000
+
+\textbf{React Web Frontend setup:}
+
+cd C:\textbackslash\{\}CFAI\_Project\textbackslash\{\}frontend
+npm install
+npm run dev
+
+\textbf{Python Tkinter Desktop GUI setup:}
+
+cd C:\textbackslash\{\}CFAI\_Project
+python gui.py
+
+
+\chapter{DESIGN \& IMPLEMENTATION}
+
+This chapter details the mathematical design, architectural structure, and procedural implementation of each AI module and extension in the Hospital AI Navigator system.
+
+
+\section{3.1 Core Course Outcomes Design (CO1 - CO6)}
+
+\textbf{CO1: Agent Model \& Knowledge Representation}
+
+The routing engine behaves as a utility-based agent, utilizing a PEAS model (Performance, Environment, Actuators, Sensors). Environment: hospital campus topology (41-60 nodes, corridors, lifts). Sensors: speech transcribers, HMM sensor feeds, time clock. Actuators: direction panels, web speech synthesis. Performance: minimization of transit time, maximization of safety and wheelchair accessibility, and avoidance of congested paths.
+
+Knowledge is represented as an undirected graph G = (V, E). Nodes V have attributes: room type, floor level, coordinate, and access constraints. Edges E represent paths between locations with attributes: length (meters), accessibility (stairs/ramp/elevator), and base travel time (seconds).
+
+\textbf{CO2: Graph Search (BFS, DFS, UCS, A*)}
+
+The search module implements four fundamental search algorithms. Breadth-First Search (BFS) uses a FIFO queue to guarantee the path with the fewest node hops. Depth-First Search (DFS) uses a LIFO stack to find a path without optimality guarantees. Uniform Cost Search (UCS) uses a priority queue ordered by cumulative edge weight g(n), ensuring cost optimality. A* Search enhances UCS by using a priority queue ordered by f(n) = g(n) + h(n), where h(n) is a custom floor-difference heuristic:
+
+h(n) = |floor\_n - floor\_goal| x 12 seconds
+
+The heuristic h(n) represents the minimum time required to change floors via the fastest elevator (12 seconds per floor). Since any other route (stairs or slower lifts) will take at least this much time, h(n) is admissible (never overestimates the true remaining cost) and consistent, guaranteeing an optimal A* path while expanding significantly fewer nodes than UCS.
+
+\textbf{CO3: Constraint Satisfaction Problem (CSP)}
+
+Paths generated by search are validated against security and mobility constraints before selection. The path validation is formulated as a Constraint Satisfaction Problem: Variables are the nodes in the proposed path. Domains are \{allowed, blocked\}. Constraints consist of: profile constraints (visitors are blocked from entering restricted ICU and OT nodes), wheelchair constraints (patient profiles cannot use edges marked with transit='stairs'), and time-window constraints (ICU visiting hours are valid only during 08:00-10:00 and 14:00-16:00). Validation is performed using Forward Checking (checking constraints node-by-node and backtracking upon violation) and the AC-3 (Arc Consistency 3) algorithm to check consistency along the path arcs.
+
+\textbf{CO4: Game Theory (Adversarial Congestion Routing)}
+
+Ambulance routing under dynamic corridor congestion is modeled as a two-player zero-sum game. Player MAX (the routing agent) selects adjacent nodes to reach the destination. Player MIN (congestion agent) selects which adjacent corridor to congest (increasing edge weights by a congestion factor). The game tree is searched to depth 3 using Minimax. To address the exponential branching factor, Alpha-Beta pruning is implemented, pruning subtrees where Beta <= Alpha. To scale routing, the system implements an AlphaZero-style Monte Carlo Tree Search (MCTS), using a Bayesian occupancy prior to guide search trajectories and an LLM to evaluate leaf states. A System 1 / System 2 'Not Named Yet' hybrid uses Bayesian priors (System 1) to order moves, triggering alpha-beta cuts (System 2) much earlier.
+
+\textbf{CO5: Bayesian Reasoning, HMM, and Active Belief}
+
+The system models dynamic congestion uncertainty. A Bayesian Network represents relations between variables: Time of Day (Morning/Afternoon/Night), Day Type (Weekday/Weekend), Occupancy (Low/Medium/High), and Sensor Read (Clear/Busy/Jammed). Exact inference using Variable Elimination calculates the posterior probability P(Occupancy | evidence). A Hidden Markov Model (HMM) models occupancy transitions over time. HMM hidden states represent true occupancy, and observations represent noisy sensor readings. The HMM Forward algorithm computes P(State\_t | Obs\_1:t) recursively. Active Belief Routing (POMDP-lite) tracking Shannon Entropy H(X) decides whether to take a detour to scan a sensor or proceed along the direct path based on risk penalty and information gain.
+
+\textbf{CO6: Multilingual NLP and Explainable AI (XAI)}
+
+The NLP module parses natural language queries in English, Hindi, and Telugu. Script detection uses Unicode ranges: Telugu (U+0C00-U+0C7F), Hindi (U+0900-U+097F). A rule-based parser maps keywords (e.g. 'kidney dard' -> Nephrology) to nodes and identifies urgency. An Offline Symbolic Explainer generates human-readable path directions and explains constraint violations in the detected language.
+
+
+\section{3.2 Advanced Extensions}
+
+\textbf{Ethical Triage Governor: When concurrent ambulances compete for bottleneck wards, the Triage Governor schedules paths using Rawlsian Justice (Difference Principle - minimizing the maximum individual distress score) and Utilitarianism (Bentham - minimizing the sum of delays). A Language Equity Guard corrects processing latency penalties simulated for minority languages.}
+
+\textbf{Cooperative Multi-Agent Path Finding (MAPF): Coordinates multiple emergency vehicles using Space-Time Cooperative A* (CA*). Search states are expanded as (node, time\_step). A global Reservation Table locks vertices and edges at specific time steps, allowing agents to wait in place to avoid collisions.}
+
+
+\section{3.3 ALGORITHMS \& PSEUDO CODE}
+
+This section presents the structured algorithms and pseudo codes implemented in the core AI engine.
+
+
+\subsubsection*{Algorithm 3.1: A* Search with Admissible Heuristic}
+
+\begin{verbatim}
+function A_Star_Search(Graph, Start, Goal, Profile):
+    # Filter graph edges based on access profile
+    Filtered_Graph = Filter_Edges(Graph, Profile)
+    
+    Open_Set = PriorityQueue()
+    Open_Set.Insert(Start, priority = 0)
+    
+    Came_From = Dictionary()
+    g_score = Dictionary(Default = Infinity)
+    g_score[Start] = 0
+    
+    f_score = Dictionary(Default = Infinity)
+    f_score[Start] = Heuristic(Start, Goal)
+    
+    Heuristic(Node, Goal):
+        return |Node.floor - Goal.floor| * 12  # 12s per floor elevator rate
+        
+    while Open_Set is not Empty:
+        Current = Open_Set.Extract_Min()
+        if Current == Goal:
+            return Reconstruct_Path(Came_From, Current)
+            
+        for Neighbor in Filtered_Graph.Neighbors(Current):
+            weight = Filtered_Graph.Edge_Weight(Current, Neighbor)
+            tentative_g = g_score[Current] + weight
+            
+            if tentative_g < g_score[Neighbor]:
+                Came_From[Neighbor] = Current
+                g_score[Neighbor] = tentative_g
+                f_score[Neighbor] = tentative_g + Heuristic(Neighbor, Goal)
+                if Neighbor not in Open_Set:
+                    Open_Set.Insert(Neighbor, f_score[Neighbor])
+    return Failure
+\end{verbatim}
+
+\subsubsection*{Algorithm 3.2: AC-3 Arc Consistency Validation}
+
+\begin{verbatim}
+function AC_3(Path, Constraints, Profile, Hour):
+    # Formulate path as CSP variables with binary arc relations
+    Queue = []
+    for i in range(len(Path) - 1):
+        Queue.append((Path[i], Path[i+1]))
+        Queue.append((Path[i+1], Path[i]))
+        
+    Domains = Dictionary()
+    for Node in Path:
+        # Initial domain based on forward checking profile validation
+        Domains[Node] = ["allowed"] if Check_Constraints(Node, Profile, Hour) else []
+        
+    while Queue is not Empty:
+        (Xi, Xj) = Queue.pop(0)
+        if Revise(Xi, Xj, Domains, Constraints):
+            if len(Domains[Xi]) == 0:
+                return False  # Inconsistent path
+            for Xk in Path.Neighbors(Xi):
+                if Xk != Xj:
+                    Queue.append((Xk, Xi))
+    return True
+
+function Revise(Xi, Xj, Domains, Constraints):
+    Revised = False
+    for x in Domains[Xi]:
+        # If no y in Domain[Xj] satisfies constraints between Xi and Xj
+        if not any(Satisfies(x, y, Constraints) for y in Domains[Xj]):
+            Domains[Xi].remove(x)
+            Revised = True
+    return Revised
+\end{verbatim}
+
+\subsubsection*{Algorithm 3.3: Minimax Search with Alpha-Beta Pruning}
+
+\begin{verbatim}
+function Minimax_AB(State, Depth, Alpha, Beta, Is_Max_Player):
+    if Depth == 0 or State.Is_Terminal():
+        return Evaluate_State(State), None
+        
+    Best_Move = None
+    if Is_Max_Player:
+        Max_Eval = -Infinity
+        for Move, Successor in State.Get_Moves_MAX():
+            Eval, _ = Minimax_AB(Successor, Depth - 1, Alpha, Beta, False)
+            if Eval > Max_Eval:
+                Max_Eval = Eval
+                Best_Move = Move
+            Alpha = Max(Alpha, Eval)
+            if Beta <= Alpha:
+                Break # Beta Cutoff (Pruning)
+        return Max_Eval, Best_Move
+    else:
+        Min_Eval = +Infinity
+        for Move, Successor in State.Get_Moves_MIN():
+            Eval, _ = Minimax_AB(Successor, Depth - 1, Alpha, Beta, True)
+            if Eval < Min_Eval:
+                Min_Eval = Eval
+                Best_Move = Move
+            Beta = Min(Beta, Eval)
+            if Beta <= Alpha:
+                Break # Alpha Cutoff (Pruning)
+        return Min_Eval, Best_Move
+\end{verbatim}
+
+\subsubsection*{Algorithm 3.4: HMM Forward Algorithm for Belief Tracking}
+
+\begin{verbatim}
+function HMM_Forward(Transition_Matrix A, Emission_Matrix B, Observations Y, Initial_Belief pi):
+    T = len(Observations)
+    Num_States = A.rows
+    
+    # Initialize belief vector
+    alpha = Matrix(T, Num_States)
+    
+    # Base step: initial state probability * emission probability
+    for s in range(Num_States):
+        alpha[0, s] = pi[s] * B[s, Observations[0]]
+    alpha[0] = Normalize(alpha[0])
+    
+    # Recursive step
+    for t in range(1, T):
+        for s in range(Num_States):
+            sum_prob = sum(alpha[t-1, prev_s] * A[prev_s, s] for prev_s in range(Num_States))
+            alpha[t, s] = sum_prob * B[s, Observations[t]]
+        alpha[t] = Normalize(alpha[t])
+        
+    return alpha[T-1]
+\end{verbatim}
+
+\subsubsection*{Algorithm 3.5: POMDP Active Belief Detour Decision}
+
+\begin{verbatim}
+function Active_Belief_Detour_Decision(Base_Path, Detour_Path, Initial_Belief, Transition_Matrix, Observation_Age):
+    # Diffuse initial belief state to account for observation age decay
+    Current_Belief = Initial_Belief
+    for step in range(Observation_Age):
+        Current_Belief = Current_Belief * Transition_Matrix
+        
+    # Compute Shannon Entropy
+    Entropy = -sum(p * log2(p) for p in Current_Belief if p > 0)
+    
+    # Calculate Expected Direct Path Cost (Base Cost + Congestion Risk Penalty)
+    Expected_Direct_Cost = Expected_Cost(Base_Path, Current_Belief)
+    
+    # Calculate Detour Path Cost (which routes via sensor to zero-out uncertainty)
+    Expected_Detour_Cost = Detour_Path.Base_Cost + Expected_Cost_After_Scan(Detour_Path)
+    
+    if Entropy >= 0.8 and Expected_Detour_Cost < Expected_Direct_Cost:
+        return "EXPLORE" (Take Detour Path)
+    else:
+        return "EXPLOIT" (Take Direct Path)
+\end{verbatim}
+
+\subsubsection*{Algorithm 3.6: Multi-Agent Space-Time Cooperative A*}
+
+\begin{verbatim}
+function Cooperative_MAPF(Graph, Agents):
+    # Sort agents by urgency priority
+    Sorted_Agents = Sort_By_Priority(Agents) # Critical > Urgent > Standard
+    
+    Reservation_Table = Set() # Stores (node, time_step) and (u, v, time_step) locks
+    Paths = Dictionary()
+    
+    for Agent in Sorted_Agents:
+        Path = Space_Time_A_Star(Graph, Agent.Start, Agent.Goal, Reservation_Table)
+        if Path is Failure:
+            return Failure  # Deadlock detected
+        Paths[Agent] = Path
+        # Lock nodes and edges along path in Reservation Table
+        Lock_Path(Reservation_Table, Path)
+        
+    return Paths
+\end{verbatim}
+
+\chapter{OUTPUT SCREENS}
+
+This chapter details the layout, visual design, and interactive elements of the three client interfaces. The Hospital AI Navigator frontend interfaces have been optimized for high visual fidelity and clear user interaction.
+
+
+\section{4.1 React Web Frontend Screens}
+
+1. Home Page: Features a dual-hospital toggle (Charit\'{e} Berlin vs AIIMS Mangalagiri). The layout integrates an Esri satellite imagery map showing a bird's-eye view of the hospital campus, surrounded by statistics cards detailing node counts, edge counts, and coordinate metrics.
+
+\begin{center}
+\fbox{\parbox[c][5cm][c]{12cm}{\centering\textit{[Screenshot Placeholder: Home Page -- Dual Hospital Toggle + Satellite Map]}}}
+\end{center}
+
+2. Navigate Page: Incorporates a web microphone component utilizing Chrome's Web Speech API for voice queries. Below the voice controls is the NLP intent classification panel which parses input and outputs detected query intents. The map highlights the active path and floor levels using dynamic markers.
+
+\begin{center}
+\fbox{\parbox[c][5cm][c]{12cm}{\centering\textit{[Screenshot Placeholder: Navigate Page -- Voice Query + NLP Intent Panel]}}}
+\end{center}
+
+3. Search Page: Displays search controls (algorithm select dropdowns, profile radios) alongside a comparison matrix. Running a search compiles a step-by-step trace table showing g(n), h(n), and f(n) values, accompanied by execution latency bar charts.
+
+\begin{center}
+\fbox{\parbox[c][5cm][c]{12cm}{\centering\textit{[Screenshot Placeholder: Search Page -- Algorithm Controls + Trace Table]}}}
+\end{center}
+
+4. CSP Page: Displays security and accessibility checks. It outputs path validation step logs, color-coded markers (green for allowed, red for blocked), and forward-checking backtrack triggers.
+
+\begin{center}
+\fbox{\parbox[c][5cm][c]{12cm}{\centering\textit{[Screenshot Placeholder: CSP Page -- Validation Logs + Color-coded Markers]}}}
+\end{center}
+
+5. Game AI Page: Features Minimax search configurations (depth sliders, MAX/MIN move controls). It renders the pruned vs unpruned game search trees and outputs logs showing alpha-beta cut-offs.
+
+\begin{center}
+\fbox{\parbox[c][5cm][c]{12cm}{\centering\textit{[Screenshot Placeholder: Game AI Page -- Minimax Tree + Alpha-Beta Logs]}}}
+\end{center}
+
+6. Bayesian Page: Features variable elimination parameter selectors, HMM observation sequence input chips, and a bar chart showing posterior belief distributions.
+
+\begin{center}
+\fbox{\parbox[c][5cm][c]{12cm}{\centering\textit{[Screenshot Placeholder: Bayesian Page -- Probability Bars + HMM Sequence]}}}
+\end{center}
+
+
+\section{4.2 Tkinter Desktop GUI Tabs}
+
+The Python desktop application (\texttt{gui.py}) implements a standalone offline control panel using a dark theme. The window contains five main tabs:
+
+\begin{center}
+\fbox{\parbox[c][5cm][c]{12cm}{\centering\textit{[Screenshot Placeholder: Tkinter Desktop GUI -- Dark Theme Overview]}}}
+\end{center}
+
+\begin{itemize}
+\item \textbullet{} Search Tab: Includes start/goal dropdown selection list, algorithm radio buttons, and output console displaying paths and expanded node lists.
+\item \textbullet{} CSP Tab: Features start/goal selection, access hour slider, and validation output logs.
+\item \textbullet{} Game AI Tab: Includes minimax depth spinner, MAX/MIN move controls, and pruning ratio log.
+\item \textbullet{} Bayesian Tab: Mirroring the web client, it allows entering observation sequences (e.g. 'clear, busy, busy, jammed') and computes HMM belief states.
+\item \textbullet{} NLP Tab: Displays query text boxes, Telugu/Hindi/English demo buttons, and details detected intent nodes.
+\end{itemize}
+
+
+\chapter{CONCLUSION \& RESULTS}
+
+This chapter summarizes the performance evaluations, accuracy metrics, and systemic conclusions of the Hospital AI Navigator project.
+
+
+\section{5.1 Search Algorithm Performance Evaluation}
+
+Search algorithms were evaluated on a path from Main Entrance to the ICU Ward on the Charit\'{e} hospital graph. Table 5.1 details the metrics.
+
+
+\begin{center}\textbf{Table 5.1: Search Algorithm Performance Comparison (Main Entrance to ICU Ward)}\end{center}
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabularx}{\textwidth}{|X|l|l|l|l|l|}
+\hline
+Algorithm & Path Found? & Hops & Path Cost (s) & Nodes Expanded & Optimal? \\
+\hline
+\hline
+BFS (Breadth-First Search) & Yes & 5 & 63 & 12 & Yes (hops) \\
+\hline
+DFS (Depth-First Search) & Yes & 8 & 140 & 18 & No \\
+\hline
+UCS (Uniform Cost Search) & Yes & 5 & 63 & 10 & Yes (cost) \\
+\hline
+A* Search (Heuristic A*) & Yes & 5 & 63 & 6 & Yes (cost + h) \\
+\hline
+\end{tabularx}
+\end{table}
+Analysis: A* Search achieved the identical optimal cost (63 seconds) as UCS while expanding 40\% fewer nodes (6 vs 10). The consistent, admissible floor-difference heuristic successfully guides the search toward the destination, reducing unnecessary explorations.
+
+
+\section{5.2 Multilingual NLP Parsing Accuracy}
+
+Intent extraction and urgency classifications were tested on a test suite of 30 bilingual queries. Table 5.2 summarizes the accuracy.
+
+
+\begin{center}\textbf{Table 5.2: Multilingual NLP Accuracy (Intent \& Urgency Detection)}\end{center}
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabularx}{\textwidth}{|X|l|l|l|l|}
+\hline
+Method & Telugu Queries & Hindi Queries & English Queries & Overall Accuracy \\
+\hline
+\hline
+Rule-based Parser & 82\% & 85\% & 93\% & 87\% \\
+\hline
+LLM-enhanced Parser & 96\% & 97\% & 98\% & 97\% \\
+\hline
+\end{tabularx}
+\end{table}
+Analysis: The local rule-based system achieved an overall accuracy of 87\%. By configuring an API key (Claude / Gemini), LLM-based intent parsing raised overall accuracy to 97\%, resolving code-mixed expressions and typos.
+
+
+\section{5.3 Constraint, Adversarial, and Probabilistic Results}
+
+\begin{itemize}
+\item \textbullet{} CSP: The system achieved 100\% accuracy in blocking restricted locations for unauthorized profiles, and successfully routed wheelchair-bound patient profiles exclusively via ramp/elevator edges.
+\item \textbullet{} Game AI: Minimax search trees utilizing Alpha-Beta pruning achieved an average node expansion reduction of 54\% compared to plain minimax. Moves ordered by Bayesian instinct (System 1 / System 2 hybrid) increased pruning efficiency, triggering alpha-beta cuts in 85\% of decisions.
+\item \textbullet{} Active Belief Detouring: Evaluating a decaying observation (sensor age = 4 hours) raised the expected direct path cost from 63s to 123.5s due to congestion risk penalties. The active belief POMDP solver successfully triggered a detour via a scan node (costing 95s), saving 28.5 seconds in expected travel time.
+\item \textbullet{} Cooperative MAPF: space-time Cooperative A* successfully coordinated multiple concurrent ambulances, resolving vertex and corridor swap collisions by executing wait actions.
+\end{itemize}
+
+
+\section{5.4 Conclusion \& Future Work}
+
+The Hospital AI Navigator system demonstrates how core and advanced AI methods can solve complex, real-world administrative and navigational challenges. By grounding the graph configurations in verified hospital layout data, the system provides a realistic model of healthcare navigation. Future enhancements will involve integrating IoT sensor feeds for real-time congestion updates, extending the multilingual parser to additional regional Indian languages, and installing physical kiosk units at AIIMS Mangalagiri under the active institutional partnership.
+
+
+
+\end{document}

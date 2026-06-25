@@ -442,7 +442,7 @@ class MCTS:
                     "note"       : (
                         f"Iter {i+1}: root.N={root.visits} | "
                         f"best={best_child.node_id if best_child else '?'} "
-                        f"Q={best_child.Q:.1f if best_child else '?'} "
+                        f"Q={f'{best_child.Q:.1f}' if best_child else '?'} "
                         f"N={best_child.visits if best_child else 0}"
                     ),
                 })

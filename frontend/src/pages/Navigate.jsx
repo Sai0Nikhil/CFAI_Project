@@ -113,6 +113,7 @@ export default function Navigate() {
         api_key: finalKey,
         provider: finalProvider,
         model: finalModel,
+        hospital,
       })
       setNlp(r.data)
       setFlow(r.data.ready_for_routing ? FLOW.LOCATING : FLOW.PARSED)

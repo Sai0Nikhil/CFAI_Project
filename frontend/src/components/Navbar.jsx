@@ -10,6 +10,7 @@ const LINKS = [
   { to: '/csp',      label: 'CSP',      emoji: '🧩' },
   { to: '/game',     label: 'Game AI',  emoji: '♟️' },
   { to: '/bayesian', label: 'Bayesian', emoji: '🎲' },
+  { to: '/ideas',    label: "Ideas Lab", emoji: '💡' },
   { to: '/nlp',      label: 'NLP',      emoji: '🌐' },
 ]
 

@@ -35,12 +35,12 @@ def test_icu_time_window_visitor():
     assert result["domain_size"] == 0
 
 def test_node_constraint_visitor_lab():
-    ok, reason = check_node_constraint("Lab_101", "visitor")
+    ok, reason = check_node_constraint("DIAG_Lab_Medicine", "visitor")
     assert ok is False
     assert "restricted" in reason.lower() or "❌" in reason
 
 def test_node_constraint_staff_lab():
-    ok, reason = check_node_constraint("Lab_101", "staff")
+    ok, reason = check_node_constraint("DIAG_Lab_Medicine", "staff")
     assert ok is True
 
 def test_edge_constraint_patient_stairs():

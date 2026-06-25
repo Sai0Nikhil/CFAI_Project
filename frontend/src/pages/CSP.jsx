@@ -134,12 +134,38 @@ export default function CSP() {
                 context={{ profile:prof, overall_valid:result.overall_valid,
                   path:result.path, violations:result.violations, trace:result.trace }}
               />
-              <div className="section-label">🧩 CSP Explainability</div>
+              <div className="section-label">🧩 CSP Formulation & Constraints (CO3)</div>
               <div className="card card-sm" style={{fontSize:'.84rem',lineHeight:1.7}}>
-                <p><strong>Backtracking:</strong> tried all paths for profile <code>{prof}</code>, pruning restricted nodes.</p>
-                <p><strong>Forward Checking:</strong> at each hop, future accessibility verified before commitment.</p>
-                <p><strong>AC-3:</strong> arc consistency enforced — if node X blocks node Y, Y pruned early.</p>
-                <p><strong>MRV:</strong> Most-Restricted-Variable chosen first → fewest valid options = first to check.</p>
+                <div className="two-col" style={{ gap: '16px' }}>
+                  <div>
+                    <strong style={{color:'#b45309', fontSize:'.9rem'}}>Variables ($X$)</strong>
+                    <p style={{fontSize:'.8rem', color:'#374151', marginTop:4}}>
+                      Each location/passage step along the proposed path: <br/>
+                      <code>{'$X = \\{X_1, X_2, \\dots, X_n\\}$'}</code>
+                    </p>
+
+                    <strong style={{color:'#b45309', fontSize:'.9rem', display:'block', marginTop:12}}>Domains ($D$)</strong>
+                    <p style={{fontSize:'.8rem', color:'#374151', marginTop:4}}>
+                       Traversal viability assignment for each step: <br/>
+                      <code>{'$Domain(X_i) = \\{\\text{Allowed}, \\text{Blocked}\\}$'}</code>
+                    </p>
+
+                    <strong style={{color:'#b45309', fontSize:'.9rem', display:'block', marginTop:12}}>Constraint Algorithms</strong>
+                    <p style={{fontSize:'.8rem', color:'#374151', marginTop:4}}>
+                      Checks path consistency dynamically using **Forward Checking** (pre-evaluation of hops), **AC-3** (enforcing edge-wise arc consistency), and the **MRV heuristic** (Variable ordering based on Time Window size).
+                    </p>
+                  </div>
+
+                  <div>
+                    <strong style={{color:'#b45309', fontSize:'.9rem'}}>Active Constraints ($C$)</strong>
+                    <ul style={{fontSize:'.8rem', color:'#374151', paddingLeft:14, marginTop:4, listStyleType:'disc'}}>
+                      <li style={{marginBottom:4}}><strong>Profile Lock:</strong> Locations cannot have selected profile in their restricted list (e.g. Visitor blocked from Labs/Wards).</li>
+                      <li style={{marginBottom:4}}><strong>Wheelchair Barrier (Patient):</strong> Cannot traverse staircases (edges with <code>via = "stairs"</code> are pruned).</li>
+                      <li style={{marginBottom:4}}><strong>Temporal ICU Window:</strong> ICU nodes locked outside of **06:00 – 22:00** for Visitors & Patients.</li>
+                      <li style={{marginBottom:4}}><strong>Emergency Override:</strong> Emergency profile overrides all access checks (<code>{'$Domain = \\{\\text{Allowed}\\}$'}</code>).</li>
+                    </ul>
+                  </div>
+                </div>
               </div>
             </>
           )}
